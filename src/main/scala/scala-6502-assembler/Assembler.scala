@@ -1,4 +1,4 @@
-package `scala-6502-assembler`
+package scala_6502_assembler
 import java.io.File
 import scopt.OParser
 
