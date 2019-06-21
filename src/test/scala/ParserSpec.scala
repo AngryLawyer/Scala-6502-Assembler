@@ -13,8 +13,7 @@ class LexerSpec extends FlatSpec with DiagrammedAssertions {
   behavior of "Comment Tokenizing"
 
   it should "tokenize comments" in {
-    val lexer = new AssemblerLexer
-    val result = lexer.parse(lexer.comment, "; Here is a comment")
+    val result = AssemblerLexer.parse(AssemblerLexer.comment, "; Here is a comment")
     assert { result.successful }
     val internal = result.get match {
       case COMMENT(string) => Some(string)
@@ -26,8 +25,7 @@ class LexerSpec extends FlatSpec with DiagrammedAssertions {
   behavior of "Number Tokenizing"
 
   it should "tokenize plain numbers" in {
-    val lexer = new AssemblerLexer
-    val result = lexer.parse(lexer.number, "12345")
+    val result = AssemblerLexer.parse(AssemblerLexer.number, "12345")
     assert { result.successful }
     val internal = result.get match {
       case NUMBER(n) => Some(n)
@@ -37,8 +35,7 @@ class LexerSpec extends FlatSpec with DiagrammedAssertions {
   }
 
   it should "tokenize decimals" in {
-    val lexer = new AssemblerLexer
-    val result = lexer.parse(lexer.decimal, "#12345")
+    val result = AssemblerLexer.parse(AssemblerLexer.decimal, "#12345")
     assert { result.successful }
     val internal = result.get match {
       case NUMBER(n) => Some(n)
@@ -48,8 +45,7 @@ class LexerSpec extends FlatSpec with DiagrammedAssertions {
   }
 
   it should "tokenize hex" in {
-    val lexer = new AssemblerLexer
-    val result = lexer.parse(lexer.hexadecimal, "$DEAD")
+    val result = AssemblerLexer.parse(AssemblerLexer.hexadecimal, "$DEAD")
     assert { result.successful }
     val internal = result.get match {
       case NUMBER(n) => Some(n)
@@ -61,8 +57,7 @@ class LexerSpec extends FlatSpec with DiagrammedAssertions {
   behavior of "Instruction tokenizing"
 
   it should "Tokenize instructions" in {
-    val lexer = new AssemblerLexer
-    val result = lexer.parse(lexer.instruction, "POP")
+    val result = AssemblerLexer.parse(AssemblerLexer.instruction, "POP")
     assert { result.successful }
     val internal = result.get match {
       case INSTRUCTION(n) => Some(n)
@@ -74,8 +69,7 @@ class LexerSpec extends FlatSpec with DiagrammedAssertions {
   behavior of "Label tokenizing"
 
   it should "Tokenize labels" in {
-    val lexer = new AssemblerLexer
-    val result = lexer.parse(lexer.label, "Shumliduc")
+    val result = AssemblerLexer.parse(AssemblerLexer.label, "Shumliduc")
     assert { result.successful }
     val internal = result.get match {
       case LABEL(n) => Some(n)
@@ -87,8 +81,7 @@ class LexerSpec extends FlatSpec with DiagrammedAssertions {
   behavior of "Directive tokenizing"
 
   it should "Tokenize directives" in {
-    val lexer = new AssemblerLexer
-    val result = lexer.parse(lexer.directive, ".BYTE")
+    val result = AssemblerLexer.parse(AssemblerLexer.directive, ".BYTE")
     assert { result.successful }
     val internal = result.get match {
       case DIRECTIVE(n) => Some(n)
@@ -100,8 +93,7 @@ class LexerSpec extends FlatSpec with DiagrammedAssertions {
   behavior of "Newline tokenizing"
 
   it should "Tokenize newlines" in {
-    val lexer = new AssemblerLexer
-    val result = lexer.parse(lexer.newline, "\n")
+    val result = AssemblerLexer.parse(AssemblerLexer.newline, "\n")
     assert { result.successful }
     val internal = result.get match {
       case NEWLINE => true
@@ -113,14 +105,13 @@ class LexerSpec extends FlatSpec with DiagrammedAssertions {
   behavior of "Full tokenizing"
 
   it should "Tokenize arbitrary programs" in {
-    val lexer = new AssemblerLexer
-    val result = lexer.parse(lexer.tokens, """LDA #02 ; Load 2 into accumulator
+    val result = AssemblerLexer("""LDA #02 ; Load 2 into accumulator
     ADC #02 ; Add 2 to accumulator
     STA $CB ; Store accumulator in 0xCB
     """)
-    assert { result.successful }
+    assert { result.isRight }
     assert {
-      result.get == List(
+      result.right.get == List(
         INSTRUCTION("LDA"),
         NUMBER(2),
         COMMENT("; Load 2 into accumulator"),
@@ -138,11 +129,10 @@ class LexerSpec extends FlatSpec with DiagrammedAssertions {
   }
 
   it should "Add a newline if one is missing" in {
-    val lexer = new AssemblerLexer
-    val result = lexer.parse(lexer.tokens, "LDA #02 ; Load 2 into accumulator")
-    assert { result.successful }
+    val result = AssemblerLexer("LDA #02 ; Load 2 into accumulator")
+    assert { result.isRight }
     assert {
-      result.get == List(
+      result.right.get == List(
         INSTRUCTION("LDA"),
         NUMBER(2),
         COMMENT("; Load 2 into accumulator"),

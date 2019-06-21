@@ -11,7 +11,10 @@ case class LABEL(text: String) extends AssemblerToken
 case class DIRECTIVE(text: String) extends AssemblerToken
 case object NEWLINE extends AssemblerToken
 
-class AssemblerLexer extends RegexParsers {
+trait AssemblerCompilationError
+case class AssemblerLexerError(msg: String) extends AssemblerCompilationError
+
+object AssemblerLexer extends RegexParsers {
   override def skipWhitespace = true
   override val whiteSpace = "[ \t\r\f]+".r
 
@@ -48,8 +51,15 @@ class AssemblerLexer extends RegexParsers {
     ) ^^ { addNewlineIfNeeded(_) }
   }
 
+  def apply(code: String): Either[AssemblerLexerError, List[AssemblerToken]] = {
+    parse(tokens, code) match {
+      case NoSuccess(msg, next) => Left(AssemblerLexerError(msg))
+      case Success(result, next) => Right(result)
+    }
+  }
+
   private def addNewlineIfNeeded(
-      tokens: List[AssemblerToken]
+     tokens: List[AssemblerToken]
   ): List[AssemblerToken] = {
     tokens.lastOption match {
       case Some(NEWLINE) => tokens
