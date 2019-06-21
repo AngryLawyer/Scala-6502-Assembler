@@ -1,5 +1,5 @@
 import org.scalatest.{FlatSpec, DiagrammedAssertions}
-import scala_6502_assembler.{AssemblerLexer, COMMENT, NUMBER, INSTRUCTION, LABEL, DIRECTIVE}
+import scala_6502_assembler.{AssemblerLexer, COMMENT, NUMBER, INSTRUCTION, LABEL, DIRECTIVE, NEWLINE}
 
 
 class LexerSpec extends FlatSpec with DiagrammedAssertions {
@@ -88,5 +88,37 @@ class LexerSpec extends FlatSpec with DiagrammedAssertions {
       case _ => None
     }
     assert { internal.get == ".BYTE" }
+  }
+
+  behavior of "Newline tokenizing"
+
+  it should "Tokenize newlines" in {
+    val lexer = new AssemblerLexer
+    val result = lexer.parse(lexer.newline, "\n")
+    assert { result.successful }
+    val internal = result.get match {
+      case NEWLINE => true
+      case _ => false
+    }
+    assert { internal == true }
+  }
+
+  behavior of "Full tokenizing"
+
+  it should "Tokenize arbitrary programs" in {
+    val lexer = new AssemblerLexer
+    val result = lexer.parse(lexer.tokens, """LDA #02 ; Load 2 into accumulator
+    ADC #02 ; Add 2 to accumulator
+    STA $CB ; Store accumulator in 0xCB
+    """)
+    assert { result.successful }
+    assert { result.get == List(INSTRUCTION("LDA"), NUMBER(2), COMMENT("; Load 2 into accumulator"), NEWLINE, INSTRUCTION("ADC"), NUMBER(2), COMMENT("; Add 2 to accumulator"), NEWLINE, INSTRUCTION("STA"), NUMBER(203), COMMENT("; Store accumulator in 0xCB"), NEWLINE) }
+  }
+
+  it should "Add a newline if one is missing" in {
+    val lexer = new AssemblerLexer
+    val result = lexer.parse(lexer.tokens, "LDA #02 ; Load 2 into accumulator")
+    assert { result.successful }
+    assert { result.get == List(INSTRUCTION("LDA"), NUMBER(2), COMMENT("; Load 2 into accumulator"), NEWLINE) }
   }
 }
