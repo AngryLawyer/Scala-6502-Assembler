@@ -1,6 +1,7 @@
 import org.scalatest.{FlatSpec, DiagrammedAssertions}
 import scala_6502_assembler.{
   AssemblerLexer,
+  AssemblerParser,
   COMMENT,
   NUMBER,
   INSTRUCTION,
@@ -139,5 +140,18 @@ class LexerSpec extends FlatSpec with DiagrammedAssertions {
         NEWLINE
       )
     }
+  }
+
+  behavior of "Parsing"
+
+  it should "Parse a simple line" in {
+    val result = AssemblerParser.line(new AssemblerParser.AssemblerTokenReader(List(
+        INSTRUCTION("LDA"),
+        NUMBER(2),
+        COMMENT("; Load 2 into accumulator"),
+        NEWLINE,
+      )
+    ))
+    assert { result.successful }
   }
 }

@@ -1,6 +1,7 @@
 package scala_6502_assembler
 
 import scala.util.parsing.combinator._
+import scala.util.parsing.input.{NoPosition, Position, Reader}
 
 sealed trait AssemblerToken
 
@@ -66,5 +67,45 @@ object AssemblerLexer extends RegexParsers {
       case Some(_)       => tokens :+ NEWLINE
       case _             => tokens
     }
+  }
+}
+
+sealed trait AddressingMode
+case class Immediate(value: Integer) extends AddressingMode
+
+sealed trait InstructionAST
+case class LDA(value: AddressingMode) extends InstructionAST
+
+sealed trait AssemblerAST
+case class Line(instruction: InstructionAST) extends AssemblerAST
+
+object AssemblerParser extends Parsers {
+  override type Elem = AssemblerToken
+
+  class AssemblerTokenReader(tokens: Seq[AssemblerToken]) extends Reader[AssemblerToken] {
+    override def first: AssemblerToken = tokens.head
+    override def atEnd: Boolean = tokens.isEmpty
+    override def pos: Position = NoPosition
+    override def rest: Reader[AssemblerToken] = new AssemblerTokenReader(tokens.tail)
+  }
+
+  def instruction: Parser[INSTRUCTION] = {
+    accept("instruction", { case ins @ INSTRUCTION(_) => ins })
+  }
+
+  def number: Parser[NUMBER] = {
+    accept("number", { case n @ NUMBER(_) => n })
+  }
+
+  def comment: Parser[COMMENT] = {
+    accept("comment", { case c @ COMMENT(_) => c })
+  }
+
+  def line: Parser[AssemblerAST] = {
+    (instruction ~ number ~ comment ~ NEWLINE) ^^ { case _ => Line(LDA(Immediate(0))) }
+  }
+
+  def program: Parser[AssemblerAST] = {
+    phrase(line)
   }
 }
