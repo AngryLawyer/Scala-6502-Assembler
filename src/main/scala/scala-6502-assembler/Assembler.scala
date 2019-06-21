@@ -3,7 +3,7 @@ import java.io.File
 import scopt.OParser
 
 case class Config(
-  in: File = new File(".")
+    in: File = new File(".")
 )
 
 object Assembler extends App {
@@ -12,7 +12,8 @@ object Assembler extends App {
   val parser = {
     OParser.sequence(
       builder.programName("Scala 6502 Assembler"),
-      builder.opt[File]('i', "in")
+      builder
+        .opt[File]('i', "in")
         .required()
         .valueName("<file>")
         .action((x, c) => c.copy(in = x))
@@ -20,8 +21,7 @@ object Assembler extends App {
     )
   }
   OParser.parse(parser, args, Config()) match {
-    case Some(config) => {
-    }
+    case Some(config) => {}
     case _ => {
       // oh no
     }
