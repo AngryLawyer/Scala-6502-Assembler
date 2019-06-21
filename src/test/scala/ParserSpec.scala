@@ -7,14 +7,16 @@ import scala_6502_assembler.{
   INSTRUCTION,
   LABEL,
   DIRECTIVE,
-  NEWLINE
+  NEWLINE,
+  HASH
 }
 
 class LexerSpec extends FlatSpec with DiagrammedAssertions {
   behavior of "Comment Tokenizing"
 
   it should "tokenize comments" in {
-    val result = AssemblerLexer.parse(AssemblerLexer.comment, "; Here is a comment")
+    val result =
+      AssemblerLexer.parse(AssemblerLexer.comment, "; Here is a comment")
     assert { result.successful }
     val internal = result.get match {
       case COMMENT(string) => Some(string)
@@ -23,20 +25,22 @@ class LexerSpec extends FlatSpec with DiagrammedAssertions {
     assert { internal.get == "; Here is a comment" }
   }
 
-  behavior of "Number Tokenizing"
+  behavior of "Hash Tokenizing"
 
-  it should "tokenize plain numbers" in {
-    val result = AssemblerLexer.parse(AssemblerLexer.number, "12345")
+  it should "tokenize hashes" in {
+    val result = AssemblerLexer.parse(AssemblerLexer.hash, "#")
     assert { result.successful }
     val internal = result.get match {
-      case NUMBER(n) => Some(n)
-      case _         => None
+      case HASH => true
+      case _    => false
     }
-    assert { internal.get == 12345 }
+    assert { internal == true }
   }
 
+  behavior of "Number Tokenizing"
+
   it should "tokenize decimals" in {
-    val result = AssemblerLexer.parse(AssemblerLexer.decimal, "#12345")
+    val result = AssemblerLexer.parse(AssemblerLexer.decimal, "12345")
     assert { result.successful }
     val internal = result.get match {
       case NUMBER(n) => Some(n)
@@ -112,20 +116,23 @@ class LexerSpec extends FlatSpec with DiagrammedAssertions {
     """)
     assert { result.isRight }
     assert {
-      result.right.get == List(
-        INSTRUCTION("LDA"),
-        NUMBER(2),
-        COMMENT("; Load 2 into accumulator"),
-        NEWLINE,
-        INSTRUCTION("ADC"),
-        NUMBER(2),
-        COMMENT("; Add 2 to accumulator"),
-        NEWLINE,
-        INSTRUCTION("STA"),
-        NUMBER(203),
-        COMMENT("; Store accumulator in 0xCB"),
-        NEWLINE
-      )
+      result.right.get ==
+        List(
+          INSTRUCTION("LDA"),
+          HASH,
+          NUMBER(2),
+          COMMENT("; Load 2 into accumulator"),
+          NEWLINE,
+          INSTRUCTION("ADC"),
+          HASH,
+          NUMBER(2),
+          COMMENT("; Add 2 to accumulator"),
+          NEWLINE,
+          INSTRUCTION("STA"),
+          NUMBER(203),
+          COMMENT("; Store accumulator in 0xCB"),
+          NEWLINE
+        )
     }
   }
 
@@ -135,6 +142,7 @@ class LexerSpec extends FlatSpec with DiagrammedAssertions {
     assert {
       result.right.get == List(
         INSTRUCTION("LDA"),
+        HASH,
         NUMBER(2),
         COMMENT("; Load 2 into accumulator"),
         NEWLINE
@@ -145,13 +153,16 @@ class LexerSpec extends FlatSpec with DiagrammedAssertions {
   behavior of "Parsing"
 
   it should "Parse a simple line" in {
-    val result = AssemblerParser.line(new AssemblerParser.AssemblerTokenReader(List(
-        INSTRUCTION("LDA"),
-        NUMBER(2),
-        COMMENT("; Load 2 into accumulator"),
-        NEWLINE,
+    val result = AssemblerParser.line(
+      new AssemblerParser.AssemblerTokenReader(
+        List(
+          INSTRUCTION("LDA"),
+          NUMBER(2),
+          COMMENT("; Load 2 into accumulator"),
+          NEWLINE
+        )
       )
-    ))
+    )
     assert { result.successful }
   }
 }
