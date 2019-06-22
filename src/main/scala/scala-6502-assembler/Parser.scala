@@ -18,41 +18,57 @@ object AssemblerParser extends Parsers {
       new AssemblerTokenReader(tokens.tail)
   }
 
-  def instructionToken: Parser[INSTRUCTION] = {
-    accept("instruction", { case ins @ INSTRUCTION(_) => ins })
+  def apply(tokens: Seq[AssemblerToken]): Either[AssemblerParserError, List[AssemblerAST]] = {
+    val reader = new AssemblerTokenReader(tokens)
+    program(reader) match {
+      case NoSuccess(msg, next) => Left(AssemblerParserError(Location(next.pos.line, next.pos.column), msg))
+      case Success(result, next) => Right(result)
+    }
   }
 
-  def number: Parser[NUMBER] = {
+  def makeInstruction(text: String): Parser[INSTRUCTION] = positioned {
+    accept(text, { case ins @ INSTRUCTION(parsedText) if parsedText == text => ins })
+  }
+
+  def number: Parser[NUMBER] = positioned {
     accept("number", { case n @ NUMBER(_) => n })
   }
 
-  def comment: Parser[COMMENT] = {
+  def comment: Parser[COMMENT] = positioned {
     accept("comment", { case c @ COMMENT(_) => c })
   }
 
-  def addressMode: Parser[AddressingMode] = {
+  def addressMode: Parser[AddressingMode] = positioned {
     val relative = (number) ^^ {
       case NUMBER(n) => Relative(n)
     }
-    val immediate = (HASH ~ number) ^^ {
+    val immediate = (HASH() ~ number) ^^ {
       case _ ~ NUMBER(n) => Immediate(n)
     }
     relative | immediate
   }
 
-  def instruction: Parser[InstructionAST] = {
-    (instructionToken ~ addressMode) ^^ {
-      case INSTRUCTION("LDA") ~ adm => LDA(adm)
+  def instruction: Parser[InstructionAST] = positioned {
+    val lda = (makeInstruction("LDA") ~ addressMode) ^^ {
+      case _ ~ adm => LDA(adm)
     }
+    val adc = (makeInstruction("ADC") ~ addressMode) ^^ {
+      case _ ~ adm => ADC(adm)
+    }
+    val sta = (makeInstruction("STA") ~ addressMode) ^^ {
+      case _ ~ adm => STA(adm)
+    }
+
+    lda | adc | sta
   }
 
-  def line: Parser[AssemblerAST] = {
-    (instruction ~ comment ~ NEWLINE) ^^ {
+  def line: Parser[AssemblerAST] = positioned {
+    (instruction ~ opt(comment) ~ NEWLINE()) ^^ {
       case inst ~ _ ~ _ => Line(inst)
     }
   }
 
-  def program: Parser[AssemblerAST] = {
-    phrase(line)
+  def program: Parser[List[AssemblerAST]] = {
+    phrase(rep1(line))
   }
 }

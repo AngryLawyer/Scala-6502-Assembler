@@ -7,34 +7,41 @@ object AssemblerLexer extends RegexParsers {
   override def skipWhitespace = true
   override val whiteSpace = "[ \t\r\f]+".r
 
-  def comment: Parser[COMMENT] = ";[ -~]+".r ^^ { str =>
-    COMMENT(str)
+  def comment: Parser[COMMENT] = positioned {
+    ";[ -~]+".r ^^ { str =>
+      COMMENT(str)
+    }
   }
 
-  def hash = "#" ^^ { _ =>
-    HASH
+  def hash: Parser[HASH] = positioned {
+    "#" ^^ { _ =>
+      HASH()
+    }
   }
 
-  def decimal: Parser[NUMBER] = "[0-9]+".r ^^ { str =>
+  def decimal: Parser[NUMBER] = positioned { "[0-9]+".r ^^ { str =>
     NUMBER(str.toInt)
-  }
+  }}
 
-  def hexadecimal: Parser[NUMBER] = """\$[0-9A-F]+""".r ^^ { str =>
+  def hexadecimal: Parser[NUMBER] = positioned { """\$[0-9A-F]+""".r ^^ { str =>
     NUMBER(Integer.parseInt(str.substring(1), 16))
-  }
+  }}
 
-  def instruction: Parser[INSTRUCTION] = "[A-Z]{3}".r ^^ { str =>
+  def instruction: Parser[INSTRUCTION] = positioned { "[A-Z]{3}".r ^^ { str =>
     INSTRUCTION(str)
-  }
-  def label: Parser[LABEL] = "[A-Za-z]+".r ^^ { str =>
+  }}
+
+  def label: Parser[LABEL] = positioned { "[A-Za-z]+".r ^^ { str =>
     LABEL(str)
-  }
-  def directive: Parser[DIRECTIVE] = """\.[A-Z]+""".r ^^ { str =>
+  }}
+
+  def directive: Parser[DIRECTIVE] = positioned { """\.[A-Z]+""".r ^^ { str =>
     DIRECTIVE(str)
-  }
-  def newline = "\n" ^^ { _ =>
-    NEWLINE
-  }
+  }}
+
+  def newline: Parser[NEWLINE] = positioned { "\n" ^^ { _ =>
+    NEWLINE()
+  }}
 
   def tokens: Parser[List[AssemblerToken]] = {
     phrase(
@@ -46,7 +53,7 @@ object AssemblerLexer extends RegexParsers {
 
   def apply(code: String): Either[AssemblerLexerError, List[AssemblerToken]] = {
     parse(tokens, code) match {
-      case NoSuccess(msg, next)  => Left(AssemblerLexerError(msg))
+      case NoSuccess(msg, next)  => Left(AssemblerLexerError(Location(next.pos.line, next.pos.column), msg))
       case Success(result, next) => Right(result)
     }
   }
@@ -55,8 +62,8 @@ object AssemblerLexer extends RegexParsers {
       tokens: List[AssemblerToken]
   ): List[AssemblerToken] = {
     tokens.lastOption match {
-      case Some(NEWLINE) => tokens
-      case Some(_)       => tokens :+ NEWLINE
+      case Some(NEWLINE()) => tokens
+      case Some(_)       => tokens :+ NEWLINE()
       case _             => tokens
     }
   }

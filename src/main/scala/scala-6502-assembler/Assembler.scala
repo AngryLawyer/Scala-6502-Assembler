@@ -1,12 +1,15 @@
 package scala_6502_assembler
 import java.io.File
 import scopt.OParser
+import scala_6502_assembler.error.AssemblerCompilationError
+import scala_6502_assembler.lexer.AssemblerLexer
+import scala_6502_assembler.parser.{AssemblerParser, AssemblerAST}
 
 case class Config(
     in: File = new File(".")
 )
 
-object Assembler extends App {
+object Main extends App {
   println("Hello")
   var builder = OParser.builder[Config]
   val parser = {
@@ -25,5 +28,14 @@ object Assembler extends App {
     case _ => {
       // oh no
     }
+  }
+}
+
+object AssemblerCompiler {
+  def apply(code: String): Either[AssemblerCompilationError, List[AssemblerAST]] = {
+    for {
+      tokens <- AssemblerLexer(code).right
+      ast <- AssemblerParser(tokens).right
+    } yield ast
   }
 }
