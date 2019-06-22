@@ -30,9 +30,19 @@ object AssemblerParser extends Parsers {
     accept("comment", { case c @ COMMENT(_) => c })
   }
 
+  def addressMode: Parser[AddressingMode] = {
+    val relative = (number) ^^ {
+      case NUMBER(n) => Relative(n)
+    }
+    val immediate = (HASH ~ number) ^^ {
+      case _ ~ NUMBER(n) => Immediate(n)
+    }
+    relative | immediate
+  }
+
   def instruction: Parser[InstructionAST] = {
-    (instructionToken ~ number) ^^ {
-      case INSTRUCTION("LDA") ~ NUMBER(n) => LDA(Immediate(n))
+    (instructionToken ~ addressMode) ^^ {
+      case INSTRUCTION("LDA") ~ adm => LDA(adm)
     }
   }
 

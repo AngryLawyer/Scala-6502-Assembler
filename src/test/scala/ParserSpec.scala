@@ -12,7 +12,10 @@ import scala_6502_assembler.parser.{
   AssemblerParser,
   Line,
   LDA,
+  ADC,
+  STA,
   Immediate,
+  Relative,
 }
 
 class ParserSpec extends FlatSpec with DiagrammedAssertions {
@@ -32,7 +35,38 @@ class ParserSpec extends FlatSpec with DiagrammedAssertions {
     )
     assert { result.successful }
     assert {
-      result.get == Line(LDA(Immediate(2)))
+      result.get == Line(LDA(Relative(2)))
+    }
+  }
+
+  it should "Parse a simple program" in {
+    val result = AssemblerParser.line(
+      new AssemblerParser.AssemblerTokenReader(
+        List(
+          INSTRUCTION("LDA"),
+          HASH,
+          NUMBER(2),
+          COMMENT("; Load 2 into accumulator"),
+          NEWLINE,
+          INSTRUCTION("ADC"),
+          HASH,
+          NUMBER(2),
+          COMMENT("; Add 2 to accumulator"),
+          NEWLINE,
+          INSTRUCTION("STA"),
+          NUMBER(203),
+          COMMENT("; Store accumulator in 0xCB"),
+          NEWLINE
+        )
+      )
+    )
+    assert { result.successful }
+    assert {
+      result.get == List(
+        Line(LDA(Immediate(2))),
+        Line(ADC(Immediate(2))),
+        Line(STA(Relative(0xCB))),
+      )
     }
   }
 }
