@@ -1,16 +1,16 @@
 package scala_6502_assembler
 import java.io.File
+import scala.io.Source
 import scopt.OParser
 import scala_6502_assembler.error.AssemblerCompilationError
 import scala_6502_assembler.lexer.AssemblerLexer
 import scala_6502_assembler.parser.{AssemblerParser, AssemblerAST}
 
 case class Config(
-    in: File = new File(".")
+  in: File = new File(".")
 )
 
 object Main extends App {
-  println("Hello")
   var builder = OParser.builder[Config]
   val parser = {
     OParser.sequence(
@@ -24,7 +24,15 @@ object Main extends App {
     )
   }
   OParser.parse(parser, args, Config()) match {
-    case Some(config) => {}
+    case Some(config) => {
+      val source = Source.fromFile(config.in)
+      val data = try {
+        source.mkString
+      } finally {
+        source.close()
+      }
+      println(AssemblerCompiler(data))
+    }
     case _ => {
       // oh no
     }
@@ -37,5 +45,9 @@ object AssemblerCompiler {
       tokens <- AssemblerLexer(code).right
       ast <- AssemblerParser(tokens).right
     } yield ast
+  }
+
+  def assemble(code: List[AssemblerAST]) = {
+
   }
 }
