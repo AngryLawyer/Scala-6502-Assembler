@@ -7,7 +7,7 @@ import scala_6502_assembler.lexer.AssemblerLexer
 import scala_6502_assembler.parser.{AssemblerParser, AssemblerAST}
 
 case class Config(
-  in: File = new File(".")
+    in: File = new File(".")
 )
 
 object Main extends App {
@@ -31,7 +31,7 @@ object Main extends App {
       } finally {
         source.close()
       }
-      println(AssemblerCompiler(data))
+      println(AssemblerCompiler.assemble(AssemblerCompiler(data).right.get))
     }
     case _ => {
       // oh no
@@ -40,14 +40,16 @@ object Main extends App {
 }
 
 object AssemblerCompiler {
-  def apply(code: String): Either[AssemblerCompilationError, List[AssemblerAST]] = {
+  def apply(
+      code: String
+  ): Either[AssemblerCompilationError, List[AssemblerAST]] = {
     for {
       tokens <- AssemblerLexer(code).right
       ast <- AssemblerParser(tokens).right
     } yield ast
   }
 
-  def assemble(code: List[AssemblerAST]) = {
-
+  def assemble(code: List[AssemblerAST]): List[Integer] = {
+    code.map(_.toBytes).flatten
   }
 }

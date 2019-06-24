@@ -18,16 +18,23 @@ object AssemblerParser extends Parsers {
       new AssemblerTokenReader(tokens.tail)
   }
 
-  def apply(tokens: Seq[AssemblerToken]): Either[AssemblerParserError, List[AssemblerAST]] = {
+  def apply(
+      tokens: Seq[AssemblerToken]
+  ): Either[AssemblerParserError, List[AssemblerAST]] = {
     val reader = new AssemblerTokenReader(tokens)
     program(reader) match {
-      case NoSuccess(msg, next) => Left(AssemblerParserError(Location(next.pos.line, next.pos.column), msg))
+      case NoSuccess(msg, next) =>
+        Left(
+          AssemblerParserError(Location(next.pos.line, next.pos.column), msg)
+        )
       case Success(result, next) => Right(result)
     }
   }
 
   def makeInstruction(text: String): Parser[INSTRUCTION] = positioned {
-    accept(text, { case ins @ INSTRUCTION(parsedText) if parsedText == text => ins })
+    accept(text, {
+      case ins @ INSTRUCTION(parsedText) if parsedText == text => ins
+    })
   }
 
   def number: Parser[NUMBER] = positioned {
@@ -40,7 +47,7 @@ object AssemblerParser extends Parsers {
 
   def addressMode: Parser[AddressingMode] = positioned {
     val relative = (number) ^^ {
-      case NUMBER(n) => Relative(n)
+      case NUMBER(n) => ZeroPage(n)
     }
     val immediate = (HASH() ~ number) ^^ {
       case _ ~ NUMBER(n) => Immediate(n)

@@ -19,29 +19,41 @@ object AssemblerLexer extends RegexParsers {
     }
   }
 
-  def decimal: Parser[NUMBER] = positioned { "[0-9]+".r ^^ { str =>
-    NUMBER(str.toInt)
-  }}
+  def decimal: Parser[NUMBER] = positioned {
+    "[0-9]+".r ^^ { str =>
+      NUMBER(str.toInt)
+    }
+  }
 
-  def hexadecimal: Parser[NUMBER] = positioned { """\$[0-9A-F]+""".r ^^ { str =>
-    NUMBER(Integer.parseInt(str.substring(1), 16))
-  }}
+  def hexadecimal: Parser[NUMBER] = positioned {
+    """\$[0-9A-F]+""".r ^^ { str =>
+      NUMBER(Integer.parseInt(str.substring(1), 16))
+    }
+  }
 
-  def instruction: Parser[INSTRUCTION] = positioned { "[A-Z]{3}".r ^^ { str =>
-    INSTRUCTION(str)
-  }}
+  def instruction: Parser[INSTRUCTION] = positioned {
+    "[A-Z]{3}".r ^^ { str =>
+      INSTRUCTION(str)
+    }
+  }
 
-  def label: Parser[LABEL] = positioned { "[A-Za-z]+".r ^^ { str =>
-    LABEL(str)
-  }}
+  def label: Parser[LABEL] = positioned {
+    "[A-Za-z]+".r ^^ { str =>
+      LABEL(str)
+    }
+  }
 
-  def directive: Parser[DIRECTIVE] = positioned { """\.[A-Z]+""".r ^^ { str =>
-    DIRECTIVE(str)
-  }}
+  def directive: Parser[DIRECTIVE] = positioned {
+    """\.[A-Z]+""".r ^^ { str =>
+      DIRECTIVE(str)
+    }
+  }
 
-  def newline: Parser[NEWLINE] = positioned { "\n" ^^ { _ =>
-    NEWLINE()
-  }}
+  def newline: Parser[NEWLINE] = positioned {
+    "\n" ^^ { _ =>
+      NEWLINE()
+    }
+  }
 
   def tokens: Parser[List[AssemblerToken]] = {
     phrase(
@@ -53,7 +65,8 @@ object AssemblerLexer extends RegexParsers {
 
   def apply(code: String): Either[AssemblerLexerError, List[AssemblerToken]] = {
     parse(tokens, code) match {
-      case NoSuccess(msg, next)  => Left(AssemblerLexerError(Location(next.pos.line, next.pos.column), msg))
+      case NoSuccess(msg, next) =>
+        Left(AssemblerLexerError(Location(next.pos.line, next.pos.column), msg))
       case Success(result, next) => Right(result)
     }
   }
@@ -63,9 +76,8 @@ object AssemblerLexer extends RegexParsers {
   ): List[AssemblerToken] = {
     tokens.lastOption match {
       case Some(NEWLINE()) => tokens
-      case Some(_)       => tokens :+ NEWLINE()
-      case _             => tokens
+      case Some(_)         => tokens :+ NEWLINE()
+      case _               => tokens
     }
   }
 }
-
