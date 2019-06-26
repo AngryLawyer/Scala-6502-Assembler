@@ -4,7 +4,7 @@ import scala.io.Source
 import scopt.OParser
 import scala_6502_assembler.error.AssemblerCompilationError
 import scala_6502_assembler.lexer.AssemblerLexer
-import scala_6502_assembler.parser.{AssemblerParser, AssemblerAST}
+import scala_6502_assembler.parser.{AssemblerParser, Section}
 
 case class Config(
     in: File = new File(".")
@@ -42,14 +42,14 @@ object Main extends App {
 object AssemblerCompiler {
   def apply(
       code: String
-  ): Either[AssemblerCompilationError, List[AssemblerAST]] = {
+  ): Either[AssemblerCompilationError, Section] = {
     for {
       tokens <- AssemblerLexer(code).right
       ast <- AssemblerParser(tokens).right
     } yield ast
   }
 
-  def assemble(code: List[AssemblerAST]): List[Integer] = {
-    code.map(_.toBytes).flatten
+  def assemble(code: Section): List[Integer] = {
+    code.toBytes
   }
 }

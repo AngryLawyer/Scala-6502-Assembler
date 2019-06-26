@@ -35,11 +35,23 @@ case class STA(value: AddressingMode) extends InstructionAST {
   }
 }
 
-sealed trait AssemblerAST extends Positional {
-  def toBytes: List[Integer];
+case class Line(instruction: InstructionAST, next: Option[Line]) extends Positional {
+  def toBytes: List[Integer] = {
+    val myInstruction = instruction.toBytes
+    next match {
+      case Some(nextLine) => myInstruction ++ nextLine.toBytes
+      case _ => myInstruction
+    }
+  }
 }
-case class Line(instruction: InstructionAST) extends AssemblerAST {
-  def toBytes = {
-    instruction.toBytes
+
+
+case class Section(startAddress: Integer, line: Line, next: Option[Section]) extends Positional {
+  def toBytes: List[Integer] = {
+    val myLine = line.toBytes
+    next match {
+      case Some(nextSection) => myLine ++ nextSection.toBytes
+      case _ => myLine
+    }
   }
 }

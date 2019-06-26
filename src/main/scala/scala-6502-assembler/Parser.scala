@@ -20,7 +20,7 @@ object AssemblerParser extends Parsers {
 
   def apply(
       tokens: Seq[AssemblerToken]
-  ): Either[AssemblerParserError, List[AssemblerAST]] = {
+  ): Either[AssemblerParserError, Section] = {
     val reader = new AssemblerTokenReader(tokens)
     program(reader) match {
       case NoSuccess(msg, next) =>
@@ -69,13 +69,19 @@ object AssemblerParser extends Parsers {
     lda | adc | sta
   }
 
-  def line: Parser[AssemblerAST] = positioned {
-    (instruction ~ opt(comment) ~ NEWLINE()) ^^ {
-      case inst ~ _ ~ _ => Line(inst)
+  def line: Parser[Line] = positioned {
+    (instruction ~ opt(comment) ~ NEWLINE() ~ opt(line)) ^^ {
+      case inst ~ _ ~ _ ~ next => Line(inst, next)
     }
   }
 
-  def program: Parser[List[AssemblerAST]] = {
-    phrase(rep1(line))
+  def section: Parser[Section] = positioned {
+    (line ~ opt(section)) ^^ {
+      case lineData ~ next => Section(0, lineData, next)
+    }
+  }
+
+  def program: Parser[Section] = positioned {
+    phrase(section)
   }
 }
