@@ -15,7 +15,8 @@ import scala_6502_assembler.parser.{
   ADC,
   STA,
   Immediate,
-  ZeroPage
+  ZeroPage,
+  Section,
 }
 
 class ParserSpec extends FlatSpec with DiagrammedAssertions {
@@ -35,7 +36,7 @@ class ParserSpec extends FlatSpec with DiagrammedAssertions {
     )
     assert { result.successful }
     assert {
-      result.get == Line(LDA(ZeroPage(2)))
+      result.get == Line(LDA(ZeroPage(2)), None)
     }
   }
 
@@ -60,10 +61,21 @@ class ParserSpec extends FlatSpec with DiagrammedAssertions {
     )
     assert { result.isRight }
     assert {
-      result.right.get == List(
-        Line(LDA(Immediate(2))),
-        Line(ADC(Immediate(2))),
-        Line(STA(ZeroPage(0xCB)))
+      result.right.get == (
+        Section(
+          0,
+          Line(
+            LDA(Immediate(2)),
+            Some(Line(
+              ADC(Immediate(2)),
+              Some(Line(
+                STA(ZeroPage(0xCB)),
+                None,
+              ))
+            ))
+          ),
+          None
+        )
       )
     }
   }
