@@ -49,7 +49,7 @@ object AssemblerCompiler {
     } yield ast
   }
 
-  def assemble(code: Section): List[Integer] = {
-    code.toBytes
+  def assemble(code: Section): String = {
+    code.toVirtual6502
   }
 }

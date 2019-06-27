@@ -47,6 +47,15 @@ case class Line(instruction: InstructionAST, next: Option[Line]) extends Positio
 
 
 case class Section(startAddress: Integer, line: Line, next: Option[Section]) extends Positional {
+  def toVirtual6502: String = {
+    val bytes = line.toBytes.map(byte => f"$byte%02x").mkString(" ")
+    val result = f":$startAddress%04x  $bytes"
+    next match {
+      case Some(nextSection) => result ++ nextSection.toVirtual6502
+      case _ => result
+    }
+  }
+
   def toBytes: List[Integer] = {
     val myLine = line.toBytes
     next match {
