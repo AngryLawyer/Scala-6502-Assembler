@@ -51,7 +51,7 @@ case class Section(startAddress: Integer, line: Line, next: Option[Section]) ext
     val bytes = line.toBytes.map(byte => f"$byte%02x").mkString(" ")
     val result = f":$startAddress%04x  $bytes"
     next match {
-      case Some(nextSection) => result ++ nextSection.toVirtual6502
+      case Some(nextSection) => result ++ "\n" ++ nextSection.toVirtual6502
       case _ => result
     }
   }
