@@ -19,16 +19,31 @@ object AssemblerLexer extends RegexParsers {
     }
   }
 
+
   def decimal: Parser[NUMBER] = positioned {
-    "[0-9]+".r ^^ { str =>
-      NUMBER(str.toInt)
-    }
+    "[0-9]+".r ^^ { str = {
+      val number = str.toInt
+      if (number > 0 && number < 256) {
+        BYTE(number)
+      } else if (number >= 256 && number < 65536) {
+        TWOBYTE(number)
+      } else {
+        NUMBER(number)
+      }
+    }}
   }
 
   def hexadecimal: Parser[NUMBER] = positioned {
-    """\$[0-9A-F]+""".r ^^ { str =>
-      NUMBER(Integer.parseInt(str.substring(1), 16))
-    }
+    """\$[0-9A-F]+""".r ^^ { str => {
+      val number = Integer.parseInt(str.substring(1), 16)
+      if (number > 0 && number < 256) {
+        BYTE(number)
+      } else if (number >= 256 && number < 65536) {
+        TWOBYTE(number)
+      } else {
+        NUMBER(number)
+      }
+    }}
   }
 
   def instruction: Parser[INSTRUCTION] = positioned {

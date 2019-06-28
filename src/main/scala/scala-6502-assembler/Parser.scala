@@ -47,7 +47,7 @@ object AssemblerParser extends Parsers {
 
   def addressMode: Parser[AddressingMode] = positioned {
     val relative = (number) ^^ {
-      case NUMBER(n) => ZeroPage(n)
+      case BYTE(n) => ZeroPage(n)
     }
     val immediate = (HASH() ~ number) ^^ {
       case _ ~ NUMBER(n) => Immediate(n)
