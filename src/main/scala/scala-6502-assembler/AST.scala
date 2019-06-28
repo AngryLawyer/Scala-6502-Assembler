@@ -2,6 +2,8 @@ package scala_6502_assembler.parser
 
 import scala.util.parsing.input.Positional
 
+case class NUMBER(value: Integer) extends Positional
+
 sealed trait AddressingMode extends Positional
 case class Immediate(value: Integer) extends AddressingMode
 case class ZeroPage(value: Integer) extends AddressingMode

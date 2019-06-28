@@ -19,30 +19,28 @@ object AssemblerLexer extends RegexParsers {
     }
   }
 
-
-  def decimal: Parser[NUMBER] = positioned {
-    "[0-9]+".r ^^ { str = {
+  def decimal: Parser[AssemblerToken] = positioned {
+    "[0-9]+".r ^^ { str => {
       val number = str.toInt
       if (number > 0 && number < 256) {
         BYTE(number)
-      } else if (number >= 256 && number < 65536) {
-        TWOBYTE(number)
       } else {
-        NUMBER(number)
+        TWOBYTES(number)
       }
     }}
   }
 
-  def hexadecimal: Parser[NUMBER] = positioned {
-    """\$[0-9A-F]+""".r ^^ { str => {
+  def hexByte: Parser[BYTE] = positioned {
+    """\$[0-9A-F]{1,2}""".r ^^ { str => {
       val number = Integer.parseInt(str.substring(1), 16)
-      if (number > 0 && number < 256) {
-        BYTE(number)
-      } else if (number >= 256 && number < 65536) {
-        TWOBYTE(number)
-      } else {
-        NUMBER(number)
-      }
+      BYTE(number)
+    }}
+  }
+
+  def hexTwoByte: Parser[TWOBYTES] = positioned {
+    """\$[0-9A-F]{3,4}""".r ^^ { str => {
+      val number = Integer.parseInt(str.substring(1), 16)
+      TWOBYTES(number)
     }}
   }
 
@@ -73,7 +71,7 @@ object AssemblerLexer extends RegexParsers {
   def tokens: Parser[List[AssemblerToken]] = {
     phrase(
       rep1(
-        comment | hash | decimal | hexadecimal | instruction | label | directive | newline
+        comment | hash | decimal | hexByte | hexTwoByte | instruction | label | directive | newline
       )
     ) ^^ { addNewlineIfNeeded(_) }
   }
