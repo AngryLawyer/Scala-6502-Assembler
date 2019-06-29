@@ -93,7 +93,7 @@ object AssemblerParser extends Parsers {
 
   def section: Parser[Section] = positioned {
     (line ~ opt(section)) ^^ {
-      case lineData ~ next => Section(0, lineData, next)
+      case lineData ~ next => Section(0x0600, lineData, next)
     }
   }
 

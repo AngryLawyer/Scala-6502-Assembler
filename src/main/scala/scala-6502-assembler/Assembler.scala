@@ -1,5 +1,5 @@
 package scala_6502_assembler
-import java.io.File
+import java.io.{File, FileOutputStream}
 import scala.io.Source
 import scopt.OParser
 import scala_6502_assembler.error.AssemblerCompilationError
@@ -31,7 +31,10 @@ object Main extends App {
       } finally {
         source.close()
       }
-      println(AssemblerCompiler.assemble(AssemblerCompiler(data).right.get))
+      var out = new FileOutputStream("./out.xex")
+      AssemblerCompiler.toXex(AssemblerCompiler(data).right.get).map(_.toByte).foreach(out.write(_))
+      out.close()
+      println(AssemblerCompiler.toXex(AssemblerCompiler(data).right.get).map(_.toChar).mkString(""))
     }
     case _ => {
       // oh no
@@ -51,5 +54,9 @@ object AssemblerCompiler {
 
   def assemble(code: Section): String = {
     code.toVirtual6502
+  }
+
+  def toXex(code: Section): List[Int] = {
+    code.toXex
   }
 }
