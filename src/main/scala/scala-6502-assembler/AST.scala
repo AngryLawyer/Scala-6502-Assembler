@@ -58,13 +58,22 @@ case class Section(startAddress: Int, line: Line, next: Option[Section]) extends
     }
   }
 
-  def toXex: List[Int] = {
+  private def toXexInner(start: Int): List[Int] = {
     val header = List(0xFF, 0xFF)
     val bytes = line.toBytes
     val startAddrBytes = List(startAddress & 0xFF, (startAddress >> 8) & 0xFF)
     val endAddr = bytes.length - startAddress - 1
     val endAddrBytes = List(endAddr & 0xFF, (endAddr >> 8) & 0xFF)
-    header ++ startAddrBytes ++ endAddrBytes ++ bytes ++ List(0xFF, 0xFF, 0xE2, 0x02, 0xE3, 0x02) ++ startAddrBytes
+    val result = header ++ startAddrBytes ++ endAddrBytes ++ bytes
+
+    next match {
+      case Some(nextSection) => result ++ nextSection.toXexInner(start)
+      case _ => result ++ List(0xFF, 0xFF, 0xE2, 0x02, 0xE3, 0x02) ++ startAddrBytes
+    }
+  }
+
+  def toXex: List[Int] = {
+    toXexInner(startAddress)
   }
 
   def toBytes: List[Int] = {
