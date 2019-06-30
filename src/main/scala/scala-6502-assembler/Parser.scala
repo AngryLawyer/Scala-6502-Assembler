@@ -91,9 +91,16 @@ object AssemblerParser extends Parsers {
     }
   }
 
+  def origin: Parser[ORIGIN] = positioned {
+    (ASTERISK() ~ EQUALS() ~ number ~ opt(comment) ~ NEWLINE()) ^^ {
+      case _ ~ _ ~ NUMBER(value) ~ _ ~ _ => ORIGIN(value)
+    }
+  }
+
   def section: Parser[Section] = positioned {
-    (line ~ opt(section)) ^^ {
-      case lineData ~ next => Section(0x0600, lineData, next)
+    (opt(origin) ~ line ~ opt(section)) ^^ {
+      case Some(ORIGIN(line))  ~ lineData ~ next => Section(line, lineData, next)
+      case _ ~ lineData ~ next => Section(0, lineData, next)
     }
   }
 

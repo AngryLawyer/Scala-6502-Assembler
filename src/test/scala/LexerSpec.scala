@@ -1,8 +1,11 @@
 import org.scalatest.{FlatSpec, DiagrammedAssertions}
 import scala_6502_assembler.lexer.{
   AssemblerLexer,
+  ASTERISK,
+  EQUALS,
   COMMENT,
-  NUMBER,
+  BYTE,
+  TWOBYTES,
   INSTRUCTION,
   LABEL,
   DIRECTIVE,
@@ -30,16 +33,36 @@ class LexerSpec extends FlatSpec with DiagrammedAssertions {
 
   behavior of "Number Tokenizing"
 
+  it should "tokenize byte decimals" in {
+    val result = AssemblerLexer.parse(AssemblerLexer.decimal, "255")
+    assert { result.successful }
+    assert { result.get == BYTE(255) }
+  }
+
+  it should "tokenize byte hex" in {
+    val result = AssemblerLexer.parse(AssemblerLexer.hexByte, "$DE")
+    assert { result.successful }
+    assert { result.get == BYTE(0xDE) }
+  }
+
   it should "tokenize decimals" in {
     val result = AssemblerLexer.parse(AssemblerLexer.decimal, "12345")
     assert { result.successful }
-    assert { result.get == NUMBER(12345) }
+    assert { result.get == TWOBYTES(12345) }
   }
 
   it should "tokenize hex" in {
-    val result = AssemblerLexer.parse(AssemblerLexer.hexadecimal, "$DEAD")
+    val result = AssemblerLexer.parse(AssemblerLexer.hexTwoByte, "$DEAD")
     assert { result.successful }
-    assert { result.get == NUMBER(0xDEAD) }
+    assert { result.get == TWOBYTES(0xDEAD) }
+  }
+
+  it should "tokenize different hex sizes" in {
+    val result = AssemblerLexer.parse(AssemblerLexer.tokens, """$0600
+      $06
+    """)
+    assert { result.successful }
+    assert { result.get == List(TWOBYTES(0x0600), NEWLINE(), BYTE(0x06), NEWLINE()) }
   }
 
   behavior of "Instruction tokenizing"
@@ -77,7 +100,8 @@ class LexerSpec extends FlatSpec with DiagrammedAssertions {
   behavior of "Full tokenizing"
 
   it should "Tokenize arbitrary programs" in {
-    val result = AssemblerLexer("""LDA #02 ; Load 2 into accumulator
+    val result = AssemblerLexer("""*=$0600
+    LDA #02 ; Load 2 into accumulator
     ADC #02 ; Add 2 to accumulator
     STA $CB ; Store accumulator in 0xCB
     """)
@@ -85,18 +109,22 @@ class LexerSpec extends FlatSpec with DiagrammedAssertions {
     assert {
       result.right.get ==
         List(
+          ASTERISK(),
+          EQUALS(),
+          TWOBYTES(0x0600),
+          NEWLINE(),
           INSTRUCTION("LDA"),
           HASH(),
-          NUMBER(2),
+          BYTE(2),
           COMMENT("; Load 2 into accumulator"),
           NEWLINE(),
           INSTRUCTION("ADC"),
           HASH(),
-          NUMBER(2),
+          BYTE(2),
           COMMENT("; Add 2 to accumulator"),
           NEWLINE(),
           INSTRUCTION("STA"),
-          NUMBER(203),
+          BYTE(203),
           COMMENT("; Store accumulator in 0xCB"),
           NEWLINE()
         )
@@ -110,7 +138,7 @@ class LexerSpec extends FlatSpec with DiagrammedAssertions {
       result.right.get == List(
         INSTRUCTION("LDA"),
         HASH(),
-        NUMBER(2),
+        BYTE(2),
         COMMENT("; Load 2 into accumulator"),
         NEWLINE()
       )

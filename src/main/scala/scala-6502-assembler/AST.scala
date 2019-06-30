@@ -3,6 +3,7 @@ package scala_6502_assembler.parser
 import scala.util.parsing.input.Positional
 
 case class NUMBER(value: Int) extends Positional
+case class ORIGIN(value: Int) extends Positional
 
 sealed trait AddressingMode extends Positional
 case class Immediate(value: Int) extends AddressingMode
@@ -46,7 +47,6 @@ case class Line(instruction: InstructionAST, next: Option[Line]) extends Positio
     }
   }
 }
-
 
 case class Section(startAddress: Int, line: Line, next: Option[Section]) extends Positional {
   def toVirtual6502: String = {

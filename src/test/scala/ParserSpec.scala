@@ -1,12 +1,15 @@
 import org.scalatest.{FlatSpec, DiagrammedAssertions}
 import scala_6502_assembler.lexer.{
   COMMENT,
-  NUMBER,
+  BYTE,
+  TWOBYTES,
   INSTRUCTION,
   LABEL,
   DIRECTIVE,
   NEWLINE,
-  HASH
+  HASH,
+  ASTERISK,
+  EQUALS,
 }
 import scala_6502_assembler.parser.{
   AssemblerParser,
@@ -28,7 +31,7 @@ class ParserSpec extends FlatSpec with DiagrammedAssertions {
       new AssemblerParser.AssemblerTokenReader(
         List(
           INSTRUCTION("LDA"),
-          NUMBER(2),
+          BYTE(2),
           COMMENT("; Load 2 into accumulator"),
           NEWLINE()
         )
@@ -45,16 +48,16 @@ class ParserSpec extends FlatSpec with DiagrammedAssertions {
       List(
         INSTRUCTION("LDA"),
         HASH(),
-        NUMBER(2),
+        BYTE(2),
         COMMENT("; Load 2 into accumulator"),
         NEWLINE(),
         INSTRUCTION("ADC"),
         HASH(),
-        NUMBER(2),
+        BYTE(2),
         COMMENT("; Add 2 to accumulator"),
         NEWLINE(),
         INSTRUCTION("STA"),
-        NUMBER(203),
+        BYTE(203),
         COMMENT("; Store accumulator in 0xCB"),
         NEWLINE()
       )

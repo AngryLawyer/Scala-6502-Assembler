@@ -68,10 +68,22 @@ object AssemblerLexer extends RegexParsers {
     }
   }
 
+  def asterisk: Parser[ASTERISK] = positioned {
+    "*" ^^ { _ =>
+      ASTERISK()
+    }
+  }
+
+  def equals: Parser[EQUALS] = positioned {
+    "=" ^^ { _ =>
+      EQUALS()
+    }
+  }
+
   def tokens: Parser[List[AssemblerToken]] = {
     phrase(
       rep1(
-        comment | hash | decimal | hexByte | hexTwoByte | instruction | label | directive | newline
+        comment | hash | decimal | hexTwoByte | hexByte | instruction | label | directive | newline | asterisk | equals
       )
     ) ^^ { addNewlineIfNeeded(_) }
   }

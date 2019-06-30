@@ -31,10 +31,11 @@ object Main extends App {
       } finally {
         source.close()
       }
+      val assembly = AssemblerCompiler(data)
       var out = new FileOutputStream("./out.xex")
-      AssemblerCompiler.toXex(AssemblerCompiler(data).right.get).map(_.toByte).foreach(out.write(_))
+      AssemblerCompiler.toXex(assembly.right.get).map(_.toByte).foreach(out.write(_))
       out.close()
-      println(AssemblerCompiler.toXex(AssemblerCompiler(data).right.get).map(_.toChar).mkString(""))
+      println(AssemblerCompiler.assemble(assembly.right.get))
     }
     case _ => {
       // oh no

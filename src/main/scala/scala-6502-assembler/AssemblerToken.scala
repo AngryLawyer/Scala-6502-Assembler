@@ -11,3 +11,5 @@ case class LABEL(text: String) extends AssemblerToken
 case class DIRECTIVE(text: String) extends AssemblerToken
 case class NEWLINE() extends AssemblerToken
 case class HASH() extends AssemblerToken
+case class ASTERISK() extends AssemblerToken
+case class EQUALS() extends AssemblerToken
