@@ -16,6 +16,24 @@ sealed trait InstructionAST extends Positional {
   def toBytes: List[Int];
 }
 
+case class CLC() extends InstructionAST {
+  def toBytes = {
+    List(0x18)
+  }
+}
+
+case class CLD() extends InstructionAST {
+  def toBytes = {
+    List(0xD8)
+  }
+}
+
+case class RTS() extends InstructionAST {
+  def toBytes = {
+    List(0x60)
+  }
+}
+
 case class LDA(value: AddressingMode) extends InstructionAST {
   def toBytes = {
     value match {

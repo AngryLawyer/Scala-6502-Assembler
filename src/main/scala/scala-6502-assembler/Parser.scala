@@ -88,6 +88,15 @@ object AssemblerParser extends Parsers {
   }
 
   def instruction: Parser[InstructionAST] = positioned {
+    val clc = makeInstruction("CLC") ^^ {
+      case _ => CLC()
+    }
+    val cld = makeInstruction("CLD") ^^ {
+      case _ => CLD()
+    }
+    val rts = makeInstruction("RTS") ^^ {
+      case _ => RTS()
+    }
     val lda = makeInstruction("LDA") ~ (zeroPage | immediate) ^^ {
       case _ ~ adm => LDA(adm)
     }
@@ -98,7 +107,7 @@ object AssemblerParser extends Parsers {
       case _ ~ adm => STA(adm)
     }
 
-    lda | adc | sta
+    clc | cld | rts | lda | adc | sta
   }
 
   def instructionLine: Parser[Line] = positioned {
