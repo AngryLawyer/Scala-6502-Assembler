@@ -13,6 +13,7 @@ import scala_6502_assembler.lexer.{
 }
 import scala_6502_assembler.parser.{
   AssemblerParser,
+  End,
   Line,
   LDA,
   ADC,
@@ -40,6 +41,28 @@ class ParserSpec extends FlatSpec with DiagrammedAssertions {
     assert { result.successful }
     assert {
       result.get == Line(LDA(ZeroPage(2)), None)
+    }
+  }
+
+  it should "Parse a .END directive" in {
+    val result = AssemblerParser.end(
+      new AssemblerParser.AssemblerTokenReader(
+        List(
+          DIRECTIVE(".END"),
+          NEWLINE(),
+          INSTRUCTION("ADC"),
+          HASH(),
+          BYTE(2),
+          NEWLINE(),
+        )
+      )
+    )
+    assert { result.successful }
+    assert {
+      result.get == End()
+    }
+    assert {
+      result.next.atEnd
     }
   }
 

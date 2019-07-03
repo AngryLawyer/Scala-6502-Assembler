@@ -41,6 +41,12 @@ object AssemblerParser extends Parsers {
     accept("comment", { case c @ COMMENT(_) => c })
   }
 
+  def makeDirective(text: String): Parser[DIRECTIVE] = positioned {
+    accept(text, {
+      case ins @ DIRECTIVE(parsedText) if parsedText == text => ins
+    })
+  }
+
   def byte: Parser[BYTE] = positioned {
     accept("byte", { case n @ BYTE(_) => n })
   }
@@ -71,6 +77,18 @@ object AssemblerParser extends Parsers {
     }
   }
 
+  def any: Parser[ANY] = positioned {
+    success(ANY()) ^^ {
+      case _ => ANY()
+    }
+  }
+
+  def end: Parser[End] = positioned {
+    makeDirective(".END") ~ opt(comment) ~ NEWLINE() ~ section ^^ {
+      case _ ~ _ ~ _ ~ _ => End()
+    }
+  }
+
   def instruction: Parser[InstructionAST] = positioned {
     val lda = makeInstruction("LDA") ~ (zeroPage | immediate) ^^ {
       case _ ~ adm => LDA(adm)
@@ -98,8 +116,17 @@ object AssemblerParser extends Parsers {
   }
 
   def section: Parser[Section] = positioned {
-    (opt(origin) ~ line ~ opt(section)) ^^ {
-      case Some(ORIGIN(line))  ~ lineData ~ next => Section(line, lineData, next)
+    def sectionOrEnd: Parser[Option[Section]] = {
+      opt(end | section) ^^ {
+        case Some(s) => s match {
+          case End() => None
+          case s @ Section(_, _, _) => Some(s)
+        }
+        case None => None
+      }
+    }
+    (opt(origin) ~ line ~ sectionOrEnd) ^^ {
+      case Some(ORIGIN(line)) ~ lineData ~ next => Section(line, lineData, next)
       case _ ~ lineData ~ next => Section(0, lineData, next)
     }
   }

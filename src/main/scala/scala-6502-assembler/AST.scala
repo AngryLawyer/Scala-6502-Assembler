@@ -4,8 +4,7 @@ import scala.util.parsing.input.Positional
 
 case class NUMBER(value: Int) extends Positional
 case class ORIGIN(value: Int) extends Positional
-
-case class End() extends Positional
+case class ANY() extends Positional
 
 sealed trait AddressingMode extends Positional
 case class Immediate(value: Int) extends AddressingMode
@@ -50,7 +49,8 @@ case class Line(instruction: InstructionAST, next: Option[Line]) extends Positio
   }
 }
 
-case class Section(startAddress: Int, line: Line, next: Option[Section]) extends Positional {
+sealed trait SectionOrEnd extends Positional
+case class Section(startAddress: Int, line: Line, next: Option[Section]) extends SectionOrEnd {
   def toVirtual6502: String = {
     val bytes = line.toBytes.map(byte => f"$byte%02x").mkString(" ")
     val result = f":$startAddress%04x  $bytes"
@@ -86,3 +86,4 @@ case class Section(startAddress: Int, line: Line, next: Option[Section]) extends
     }
   }
 }
+case class End() extends SectionOrEnd
