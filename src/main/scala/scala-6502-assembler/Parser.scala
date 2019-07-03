@@ -31,9 +31,9 @@ object AssemblerParser extends Parsers {
     }
   }
 
-  def makeInstruction(text: String): Parser[INSTRUCTION] = positioned {
+  def makeInstruction(text: String): Parser[Instruction] = positioned {
     accept(text, {
-      case ins @ INSTRUCTION(parsedText) if parsedText == text => ins
+      case STRING(parsedText) if parsedText == text => Instruction(parsedText)
     })
   }
 
@@ -77,14 +77,12 @@ object AssemblerParser extends Parsers {
     }
   }
 
-  def any: Parser[ANY] = positioned {
-    success(ANY()) ^^ {
-      case _ => ANY()
-    }
+  def label: Parser[Label] = positioned {
+    accept("label", { case STRING(l) => Label(l) })
   }
 
   def end: Parser[End] = positioned {
-    makeDirective(".END") ~ opt(comment) ~ NEWLINE() ~ section ^^ {
+    makeDirective(".END") ~ opt(comment) ~ NEWLINE() ~ opt(section) ^^ {
       case _ ~ _ ~ _ ~ _ => End()
     }
   }
@@ -104,14 +102,19 @@ object AssemblerParser extends Parsers {
   }
 
   def instructionLine: Parser[Line] = positioned {
-    (instruction ~ opt(comment) ~ NEWLINE() ~ opt(line)) ^^ {
-      case inst ~ _ ~ _ ~ next => InstructionLine(inst, next)
+    def lineWithoutLabel = (instruction ~ opt(comment) ~ NEWLINE() ~ opt(line)) ^^ {
+      case inst ~ _ ~ _ ~ next => InstructionLine(None, inst, next)
     }
+    def lineWithLabel = (label ~ instruction ~ opt(comment) ~ NEWLINE() ~ opt(line)) ^^ {
+      case label ~ inst ~ _ ~ _ ~ next => InstructionLine(Some(label), inst, next)
+    }
+
+    lineWithoutLabel | lineWithLabel
   }
 
   def commentedLine: Parser[Line] = positioned {
-    (opt(comment) ~ NEWLINE() ~ opt(line)) ^^ {
-      case _ ~ _ ~ next => CommentedLine(next)
+    (opt(label) ~ opt(comment) ~ NEWLINE() ~ opt(line)) ^^ {
+      case label ~ _ ~ _ ~ next => CommentedLine(label, next)
     }
   }
 

@@ -4,7 +4,9 @@ import scala.util.parsing.input.Positional
 
 case class NUMBER(value: Int) extends Positional
 case class ORIGIN(value: Int) extends Positional
-case class ANY() extends Positional
+
+case class Label(name: String) extends Positional
+case class Instruction(name: String) extends Positional
 
 sealed trait AddressingMode extends Positional
 case class Immediate(value: Int) extends AddressingMode
@@ -43,7 +45,7 @@ sealed trait Line extends Positional {
   def toBytes: List[Int]
 }
 
-case class InstructionLine(instruction: InstructionAST, next: Option[Line])
+case class InstructionLine(label: Option[Label], instruction: InstructionAST, next: Option[Line])
     extends Line {
   def toBytes: List[Int] = {
     val myInstruction = instruction.toBytes
@@ -54,7 +56,7 @@ case class InstructionLine(instruction: InstructionAST, next: Option[Line])
   }
 }
 
-case class CommentedLine(next: Option[Line]) extends Line {
+case class CommentedLine(label: Option[Label], next: Option[Line]) extends Line {
   def toBytes: List[Int] = {
     next match {
       case Some(nextLine) => nextLine.toBytes

@@ -6,8 +6,7 @@ import scala_6502_assembler.lexer.{
   COMMENT,
   BYTE,
   TWOBYTES,
-  INSTRUCTION,
-  LABEL,
+  STRING,
   DIRECTIVE,
   NEWLINE,
   HASH
@@ -67,20 +66,12 @@ class LexerSpec extends FlatSpec with DiagrammedAssertions {
     }
   }
 
-  behavior of "Instruction tokenizing"
+  behavior of "STRING tokenizing"
 
-  it should "Tokenize instructions" in {
-    val result = AssemblerLexer.parse(AssemblerLexer.instruction, "POP")
+  it should "Tokenize STRINGs" in {
+    val result = AssemblerLexer.parse(AssemblerLexer.string, "POP")
     assert { result.successful }
-    assert { result.get == INSTRUCTION("POP") }
-  }
-
-  behavior of "Label tokenizing"
-
-  it should "Tokenize labels" in {
-    val result = AssemblerLexer.parse(AssemblerLexer.label, "Shumliduc")
-    assert { result.successful }
-    assert { result.get == LABEL("Shumliduc") }
+    assert { result.get == STRING("POP") }
   }
 
   behavior of "Directive tokenizing"
@@ -115,17 +106,17 @@ class LexerSpec extends FlatSpec with DiagrammedAssertions {
           EQUALS(),
           TWOBYTES(0x0600),
           NEWLINE(),
-          INSTRUCTION("LDA"),
+          STRING("LDA"),
           HASH(),
           BYTE(2),
           COMMENT("; Load 2 into accumulator"),
           NEWLINE(),
-          INSTRUCTION("ADC"),
+          STRING("ADC"),
           HASH(),
           BYTE(2),
           COMMENT("; Add 2 to accumulator"),
           NEWLINE(),
-          INSTRUCTION("STA"),
+          STRING("STA"),
           BYTE(203),
           COMMENT("; Store accumulator in 0xCB"),
           NEWLINE()
@@ -138,7 +129,7 @@ class LexerSpec extends FlatSpec with DiagrammedAssertions {
     assert { result.isRight }
     assert {
       result.right.get == List(
-        INSTRUCTION("LDA"),
+        STRING("LDA"),
         HASH(),
         BYTE(2),
         COMMENT("; Load 2 into accumulator"),

@@ -8,7 +8,7 @@ object AssemblerLexer extends RegexParsers {
   override val whiteSpace = "[ \t\r\f]+".r
 
   def comment: Parser[COMMENT] = positioned {
-    ";[ -~]+".r ^^ { str =>
+    ";[ -~]*".r ^^ { str =>
       COMMENT(str)
     }
   }
@@ -50,15 +50,9 @@ object AssemblerLexer extends RegexParsers {
     }
   }
 
-  def instruction: Parser[INSTRUCTION] = positioned {
-    "[A-Z]{3}".r ^^ { str =>
-      INSTRUCTION(str)
-    }
-  }
-
-  def label: Parser[LABEL] = positioned {
+  def string: Parser[STRING] = positioned {
     "[A-Za-z]+".r ^^ { str =>
-      LABEL(str)
+      STRING(str)
     }
   }
 
@@ -89,7 +83,7 @@ object AssemblerLexer extends RegexParsers {
   def tokens: Parser[List[AssemblerToken]] = {
     phrase(
       rep1(
-        comment | hash | decimal | hexTwoByte | hexByte | instruction | label | directive | newline | asterisk | equals
+        comment | hash | decimal | hexTwoByte | hexByte | string | directive | newline | asterisk | equals
       )
     ) ^^ { addNewlineIfNeeded(_) }
   }

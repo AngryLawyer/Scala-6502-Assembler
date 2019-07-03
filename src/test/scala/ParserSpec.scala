@@ -3,8 +3,7 @@ import scala_6502_assembler.lexer.{
   COMMENT,
   BYTE,
   TWOBYTES,
-  INSTRUCTION,
-  LABEL,
+  STRING,
   DIRECTIVE,
   NEWLINE,
   HASH,
@@ -32,7 +31,7 @@ class ParserSpec extends FlatSpec with DiagrammedAssertions {
     val result = AssemblerParser.instructionLine(
       new AssemblerParser.AssemblerTokenReader(
         List(
-          INSTRUCTION("LDA"),
+          STRING("LDA"),
           BYTE(2),
           COMMENT("; Load 2 into accumulator"),
           NEWLINE()
@@ -41,7 +40,7 @@ class ParserSpec extends FlatSpec with DiagrammedAssertions {
     )
     assert { result.successful }
     assert {
-      result.get == InstructionLine(LDA(ZeroPage(2)), None)
+      result.get == InstructionLine(None, LDA(ZeroPage(2)), None)
     }
   }
 
@@ -51,7 +50,7 @@ class ParserSpec extends FlatSpec with DiagrammedAssertions {
         List(
           DIRECTIVE(".END"),
           NEWLINE(),
-          INSTRUCTION("ADC"),
+          STRING("ADC"),
           HASH(),
           BYTE(2),
           NEWLINE()
@@ -70,14 +69,14 @@ class ParserSpec extends FlatSpec with DiagrammedAssertions {
   it should "Stop parsing after a .END directive" in {
     val result = AssemblerParser(
       List(
-        INSTRUCTION("LDA"),
+        STRING("LDA"),
         HASH(),
         BYTE(2),
         COMMENT("; Load 2 into accumulator"),
         NEWLINE(),
         DIRECTIVE(".END"),
         NEWLINE(),
-        INSTRUCTION("ADC"),
+        STRING("ADC"),
         HASH(),
         BYTE(2),
         COMMENT("; Add 2 to accumulator"),
@@ -90,6 +89,7 @@ class ParserSpec extends FlatSpec with DiagrammedAssertions {
         Section(
           0,
           InstructionLine(
+            None,
             LDA(Immediate(2)),
             None
           ),
@@ -102,17 +102,17 @@ class ParserSpec extends FlatSpec with DiagrammedAssertions {
   it should "Parse a simple program" in {
     val result = AssemblerParser(
       List(
-        INSTRUCTION("LDA"),
+        STRING("LDA"),
         HASH(),
         BYTE(2),
         COMMENT("; Load 2 into accumulator"),
         NEWLINE(),
-        INSTRUCTION("ADC"),
+        STRING("ADC"),
         HASH(),
         BYTE(2),
         COMMENT("; Add 2 to accumulator"),
         NEWLINE(),
-        INSTRUCTION("STA"),
+        STRING("STA"),
         BYTE(203),
         COMMENT("; Store accumulator in 0xCB"),
         NEWLINE()
@@ -124,12 +124,15 @@ class ParserSpec extends FlatSpec with DiagrammedAssertions {
         Section(
           0,
           InstructionLine(
+            None,
             LDA(Immediate(2)),
             Some(
               InstructionLine(
+                None,
                 ADC(Immediate(2)),
                 Some(
                   InstructionLine(
+                    None,
                     STA(ZeroPage(0xCB)),
                     None
                   )
@@ -146,20 +149,20 @@ class ParserSpec extends FlatSpec with DiagrammedAssertions {
   it should "Handle comments and newlines in code" in {
     val result = AssemblerParser(
       List(
-        INSTRUCTION("LDA"),
+        STRING("LDA"),
         HASH(),
         BYTE(2),
         COMMENT("; Load 2 into accumulator"),
         NEWLINE(),
         NEWLINE(),
-        INSTRUCTION("ADC"),
+        STRING("ADC"),
         HASH(),
         BYTE(2),
         COMMENT("; Add 2 to accumulator"),
         NEWLINE(),
         COMMENT("; And then the last bit"),
         NEWLINE(),
-        INSTRUCTION("STA"),
+        STRING("STA"),
         BYTE(203),
         COMMENT("; Store accumulator in 0xCB"),
         NEWLINE()
@@ -171,15 +174,19 @@ class ParserSpec extends FlatSpec with DiagrammedAssertions {
         Section(
           0,
           InstructionLine(
+            None,
             LDA(Immediate(2)),
             Some(
               CommentedLine(
+                None,
                 Some(
                   InstructionLine(
+                    None,
                     ADC(Immediate(2)),
                     Some(
                       CommentedLine(
-                        Some(InstructionLine(STA(ZeroPage(203)), None))
+                        None,
+                        Some(InstructionLine(None, STA(ZeroPage(203)), None))
                       )
                     )
                   )
