@@ -71,6 +71,12 @@ object AssemblerParser extends Parsers {
     }
   }
 
+  def absolute: Parser[AddressingMode] = positioned {
+    twoBytes ^^ {
+      case TWOBYTES(n) => Absolute(n)
+    }
+  }
+
   def immediate: Parser[AddressingMode] = positioned {
     HASH() ~ number ^^ {
       case _ ~ NUMBER(n) => Immediate(n)
@@ -97,6 +103,9 @@ object AssemblerParser extends Parsers {
     val rts = makeInstruction("RTS") ^^ {
       case _ => RTS()
     }
+    val jmp = makeInstruction("JMP") ~ absolute ^^ {
+      case _ ~ adm => JMP(adm)
+    }
     val lda = makeInstruction("LDA") ~ (zeroPage | immediate) ^^ {
       case _ ~ adm => LDA(adm)
     }
@@ -107,7 +116,7 @@ object AssemblerParser extends Parsers {
       case _ ~ adm => STA(adm)
     }
 
-    clc | cld | rts | lda | adc | sta
+    clc | cld | rts | jmp | lda | adc | sta
   }
 
   def instructionLine: Parser[Line] = positioned {

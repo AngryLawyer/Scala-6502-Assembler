@@ -2,6 +2,8 @@ package scala_6502_assembler.parser
 
 import scala.util.parsing.input.Positional
 
+case class UnsupportedAddressingModeException(private val message: String = "", private val cause: Throwable = None.orNull) extends Exception(message, cause)
+
 case class NUMBER(value: Int) extends Positional
 case class ORIGIN(value: Int) extends Positional
 
@@ -11,9 +13,19 @@ case class Instruction(name: String) extends Positional
 sealed trait AddressingMode extends Positional
 case class Immediate(value: Int) extends AddressingMode
 case class ZeroPage(value: Int) extends AddressingMode
+case class Absolute(value: Int) extends AddressingMode
 
 sealed trait InstructionAST extends Positional {
   def toBytes: List[Int];
+}
+
+case class JMP(value: AddressingMode) extends InstructionAST {
+  def toBytes = {
+    value match {
+      case Absolute(n) => List(0x4C, n & 0xFF, (n >> 8) & 0xFF)
+      case _ => throw new UnsupportedAddressingModeException
+    }
+  }
 }
 
 case class CLC() extends InstructionAST {
@@ -39,6 +51,7 @@ case class LDA(value: AddressingMode) extends InstructionAST {
     value match {
       case Immediate(n) => List(0xA9, n)
       case ZeroPage(n)  => List(0xA5, n)
+      case _ => throw new UnsupportedAddressingModeException
     }
   }
 }
@@ -47,6 +60,7 @@ case class ADC(value: AddressingMode) extends InstructionAST {
     value match {
       case Immediate(n) => List(0x69, n)
       case ZeroPage(n)  => List(0x65, n)
+      case _ => throw new UnsupportedAddressingModeException
     }
   }
 }
@@ -54,7 +68,7 @@ case class STA(value: AddressingMode) extends InstructionAST {
   def toBytes = {
     value match {
       case ZeroPage(n) => List(0x85, n)
-      case _           => List()
+      case _ => throw new UnsupportedAddressingModeException
     }
   }
 }
