@@ -5,6 +5,8 @@ import scala.util.parsing.input.Positional
 case class NUMBER(value: Int) extends Positional
 case class ORIGIN(value: Int) extends Positional
 
+case class End() extends Positional
+
 sealed trait AddressingMode extends Positional
 case class Immediate(value: Int) extends AddressingMode
 case class ZeroPage(value: Int) extends AddressingMode

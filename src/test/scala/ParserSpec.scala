@@ -43,6 +43,38 @@ class ParserSpec extends FlatSpec with DiagrammedAssertions {
     }
   }
 
+  it should "Stop parsing after a .END directive" in {
+    val result = AssemblerParser(
+      List(
+        INSTRUCTION("LDA"),
+        HASH(),
+        BYTE(2),
+        COMMENT("; Load 2 into accumulator"),
+        NEWLINE(),
+        DIRECTIVE(".END"),
+        NEWLINE(),
+        INSTRUCTION("ADC"),
+        HASH(),
+        BYTE(2),
+        COMMENT("; Add 2 to accumulator"),
+        NEWLINE(),
+      )
+    )
+    assert { result.isRight }
+    assert {
+      result.right.get == (
+        Section(
+          0,
+          Line(
+            LDA(Immediate(2)),
+            None
+          ),
+          None
+        )
+      )
+    }
+  }
+
   it should "Parse a simple program" in {
     val result = AssemblerParser(
       List(
