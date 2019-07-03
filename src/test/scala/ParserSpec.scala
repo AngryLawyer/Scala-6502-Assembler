@@ -9,18 +9,19 @@ import scala_6502_assembler.lexer.{
   NEWLINE,
   HASH,
   ASTERISK,
-  EQUALS,
+  EQUALS
 }
 import scala_6502_assembler.parser.{
   AssemblerParser,
   End,
-  Line,
+  CommentedLine,
+  InstructionLine,
   LDA,
   ADC,
   STA,
   Immediate,
   ZeroPage,
-  Section,
+  Section
 }
 
 class ParserSpec extends FlatSpec with DiagrammedAssertions {
@@ -28,7 +29,7 @@ class ParserSpec extends FlatSpec with DiagrammedAssertions {
   behavior of "Parsing"
 
   it should "Parse a simple line" in {
-    val result = AssemblerParser.line(
+    val result = AssemblerParser.instructionLine(
       new AssemblerParser.AssemblerTokenReader(
         List(
           INSTRUCTION("LDA"),
@@ -40,7 +41,7 @@ class ParserSpec extends FlatSpec with DiagrammedAssertions {
     )
     assert { result.successful }
     assert {
-      result.get == Line(LDA(ZeroPage(2)), None)
+      result.get == InstructionLine(LDA(ZeroPage(2)), None)
     }
   }
 
@@ -53,7 +54,7 @@ class ParserSpec extends FlatSpec with DiagrammedAssertions {
           INSTRUCTION("ADC"),
           HASH(),
           BYTE(2),
-          NEWLINE(),
+          NEWLINE()
         )
       )
     )
@@ -80,7 +81,7 @@ class ParserSpec extends FlatSpec with DiagrammedAssertions {
         HASH(),
         BYTE(2),
         COMMENT("; Add 2 to accumulator"),
-        NEWLINE(),
+        NEWLINE()
       )
     )
     assert { result.isRight }
@@ -88,7 +89,7 @@ class ParserSpec extends FlatSpec with DiagrammedAssertions {
       result.right.get == (
         Section(
           0,
-          Line(
+          InstructionLine(
             LDA(Immediate(2)),
             None
           ),
@@ -122,15 +123,69 @@ class ParserSpec extends FlatSpec with DiagrammedAssertions {
       result.right.get == (
         Section(
           0,
-          Line(
+          InstructionLine(
             LDA(Immediate(2)),
-            Some(Line(
-              ADC(Immediate(2)),
-              Some(Line(
-                STA(ZeroPage(0xCB)),
-                None,
-              ))
-            ))
+            Some(
+              InstructionLine(
+                ADC(Immediate(2)),
+                Some(
+                  InstructionLine(
+                    STA(ZeroPage(0xCB)),
+                    None
+                  )
+                )
+              )
+            )
+          ),
+          None
+        )
+      )
+    }
+  }
+
+  it should "Handle comments and newlines in code" in {
+    val result = AssemblerParser(
+      List(
+        INSTRUCTION("LDA"),
+        HASH(),
+        BYTE(2),
+        COMMENT("; Load 2 into accumulator"),
+        NEWLINE(),
+        NEWLINE(),
+        INSTRUCTION("ADC"),
+        HASH(),
+        BYTE(2),
+        COMMENT("; Add 2 to accumulator"),
+        NEWLINE(),
+        COMMENT("; And then the last bit"),
+        NEWLINE(),
+        INSTRUCTION("STA"),
+        BYTE(203),
+        COMMENT("; Store accumulator in 0xCB"),
+        NEWLINE()
+      )
+    )
+    assert { result.isRight }
+    assert {
+      result.right.get == (
+        Section(
+          0,
+          InstructionLine(
+            LDA(Immediate(2)),
+            Some(
+              CommentedLine(
+                Some(
+                  InstructionLine(
+                    ADC(Immediate(2)),
+                    Some(
+                      CommentedLine(
+                        Some(InstructionLine(STA(ZeroPage(203)), None))
+                      )
+                    )
+                  )
+                )
+              )
+            )
           ),
           None
         )

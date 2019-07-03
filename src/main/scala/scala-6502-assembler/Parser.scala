@@ -103,10 +103,20 @@ object AssemblerParser extends Parsers {
     lda | adc | sta
   }
 
-  def line: Parser[Line] = positioned {
+  def instructionLine: Parser[Line] = positioned {
     (instruction ~ opt(comment) ~ NEWLINE() ~ opt(line)) ^^ {
-      case inst ~ _ ~ _ ~ next => Line(inst, next)
+      case inst ~ _ ~ _ ~ next => InstructionLine(inst, next)
     }
+  }
+
+  def commentedLine: Parser[Line] = positioned {
+    (opt(comment) ~ NEWLINE() ~ opt(line)) ^^ {
+      case _ ~ _ ~ next => CommentedLine(next)
+    }
+  }
+
+  def line: Parser[Line] = positioned {
+    instructionLine | commentedLine
   }
 
   def origin: Parser[ORIGIN] = positioned {
@@ -118,16 +128,17 @@ object AssemblerParser extends Parsers {
   def section: Parser[Section] = positioned {
     def sectionOrEnd: Parser[Option[Section]] = {
       opt(end | section) ^^ {
-        case Some(s) => s match {
-          case End() => None
-          case s @ Section(_, _, _) => Some(s)
-        }
+        case Some(s) =>
+          s match {
+            case End()                => None
+            case s @ Section(_, _, _) => Some(s)
+          }
         case None => None
       }
     }
     (opt(origin) ~ line ~ sectionOrEnd) ^^ {
       case Some(ORIGIN(line)) ~ lineData ~ next => Section(line, lineData, next)
-      case _ ~ lineData ~ next => Section(0, lineData, next)
+      case _ ~ lineData ~ next                  => Section(0, lineData, next)
     }
   }
 

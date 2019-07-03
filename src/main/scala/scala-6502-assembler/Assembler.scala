@@ -33,7 +33,10 @@ object Main extends App {
       }
       val assembly = AssemblerCompiler(data)
       var out = new FileOutputStream("./out.xex")
-      AssemblerCompiler.toXex(assembly.right.get).map(_.toByte).foreach(out.write(_))
+      AssemblerCompiler
+        .toXex(assembly.right.get)
+        .map(_.toByte)
+        .foreach(out.write(_))
       out.close()
       println(AssemblerCompiler.assemble(assembly.right.get))
     }

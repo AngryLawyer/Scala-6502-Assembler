@@ -18,7 +18,7 @@ case class LDA(value: AddressingMode) extends InstructionAST {
   def toBytes = {
     value match {
       case Immediate(n) => List(0xA9, n)
-      case ZeroPage(n) => List(0xA5, n)
+      case ZeroPage(n)  => List(0xA5, n)
     }
   }
 }
@@ -26,7 +26,7 @@ case class ADC(value: AddressingMode) extends InstructionAST {
   def toBytes = {
     value match {
       case Immediate(n) => List(0x69, n)
-      case ZeroPage(n) => List(0x65, n)
+      case ZeroPage(n)  => List(0x65, n)
     }
   }
 }
@@ -34,29 +34,44 @@ case class STA(value: AddressingMode) extends InstructionAST {
   def toBytes = {
     value match {
       case ZeroPage(n) => List(0x85, n)
-      case _ => List()
+      case _           => List()
     }
   }
 }
 
-case class Line(instruction: InstructionAST, next: Option[Line]) extends Positional {
+sealed trait Line extends Positional {
+  def toBytes: List[Int]
+}
+
+case class InstructionLine(instruction: InstructionAST, next: Option[Line])
+    extends Line {
   def toBytes: List[Int] = {
     val myInstruction = instruction.toBytes
     next match {
       case Some(nextLine) => myInstruction ++ nextLine.toBytes
-      case _ => myInstruction
+      case _              => myInstruction
+    }
+  }
+}
+
+case class CommentedLine(next: Option[Line]) extends Line {
+  def toBytes: List[Int] = {
+    next match {
+      case Some(nextLine) => nextLine.toBytes
+      case _              => List()
     }
   }
 }
 
 sealed trait SectionOrEnd extends Positional
-case class Section(startAddress: Int, line: Line, next: Option[Section]) extends SectionOrEnd {
+case class Section(startAddress: Int, line: Line, next: Option[Section])
+    extends SectionOrEnd {
   def toVirtual6502: String = {
     val bytes = line.toBytes.map(byte => f"$byte%02x").mkString(" ")
     val result = f":$startAddress%04x  $bytes"
     next match {
       case Some(nextSection) => result ++ "\n" ++ nextSection.toVirtual6502
-      case _ => result
+      case _                 => result
     }
   }
 
@@ -70,7 +85,8 @@ case class Section(startAddress: Int, line: Line, next: Option[Section]) extends
 
     next match {
       case Some(nextSection) => result ++ nextSection.toXexInner(start)
-      case _ => result ++ List(0xFF, 0xFF, 0xE2, 0x02, 0xE3, 0x02) ++ startAddrBytes
+      case _ =>
+        result ++ List(0xFF, 0xFF, 0xE2, 0x02, 0xE3, 0x02) ++ startAddrBytes
     }
   }
 
@@ -82,7 +98,7 @@ case class Section(startAddress: Int, line: Line, next: Option[Section]) extends
     val myLine = line.toBytes
     next match {
       case Some(nextSection) => myLine ++ nextSection.toBytes
-      case _ => myLine
+      case _                 => myLine
     }
   }
 }

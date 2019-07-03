@@ -62,7 +62,9 @@ class LexerSpec extends FlatSpec with DiagrammedAssertions {
       $06
     """)
     assert { result.successful }
-    assert { result.get == List(TWOBYTES(0x0600), NEWLINE(), BYTE(0x06), NEWLINE()) }
+    assert {
+      result.get == List(TWOBYTES(0x0600), NEWLINE(), BYTE(0x06), NEWLINE())
+    }
   }
 
   behavior of "Instruction tokenizing"
