@@ -14,6 +14,7 @@ sealed trait AddressingMode extends Positional
 case class Immediate(value: Int) extends AddressingMode
 case class ZeroPage(value: Int) extends AddressingMode
 case class Absolute(value: Int) extends AddressingMode
+case class Relative(value: Int) extends AddressingMode
 
 sealed trait InstructionAST extends Positional {
   def toBytes: List[Int];
@@ -46,11 +47,21 @@ case class RTS() extends InstructionAST {
   }
 }
 
+case class BCS(value: AddressingMode) extends InstructionAST {
+  def toBytes = {
+    value match {
+      case Relative(n) => List(0xB0, n)
+      case _ => throw new UnsupportedAddressingModeException
+    }
+  }
+}
+
 case class LDA(value: AddressingMode) extends InstructionAST {
   def toBytes = {
     value match {
       case Immediate(n) => List(0xA9, n)
       case ZeroPage(n)  => List(0xA5, n)
+      case Absolute(n)  => List(0xAD, n & 0xFF, (n >> 8) & 0xFF)
       case _ => throw new UnsupportedAddressingModeException
     }
   }
@@ -60,6 +71,7 @@ case class ADC(value: AddressingMode) extends InstructionAST {
     value match {
       case Immediate(n) => List(0x69, n)
       case ZeroPage(n)  => List(0x65, n)
+      case Absolute(n)  => List(0x6D, n & 0xff, (n >> 8) & 0xff)
       case _ => throw new UnsupportedAddressingModeException
     }
   }
@@ -68,6 +80,7 @@ case class STA(value: AddressingMode) extends InstructionAST {
   def toBytes = {
     value match {
       case ZeroPage(n) => List(0x85, n)
+      case Absolute(n)  => List(0x8D, n & 0xff, (n >> 8) & 0xff)
       case _ => throw new UnsupportedAddressingModeException
     }
   }

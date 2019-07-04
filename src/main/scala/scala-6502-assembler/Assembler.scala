@@ -31,6 +31,7 @@ object Main extends App {
       } finally {
         source.close()
       }
+      println(AssemblerLexer(data).right)
       val assembly = AssemblerCompiler(data)
       var out = new FileOutputStream("./out.xex")
       AssemblerCompiler

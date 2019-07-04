@@ -51,7 +51,7 @@ object AssemblerLexer extends RegexParsers {
   }
 
   def string: Parser[STRING] = positioned {
-    "[A-Za-z]+".r ^^ { str =>
+    "[A-Za-z][A-Za-z0-9_]*".r ^^ { str =>
       STRING(str)
     }
   }
