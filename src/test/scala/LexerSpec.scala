@@ -77,7 +77,7 @@ class LexerSpec extends FlatSpec with DiagrammedAssertions {
   it should "Tokenize strings that contain numbers" in {
     val result = AssemblerLexer.parse(AssemblerLexer.string, "Pop_8")
     assert { result.successful }
-    assert { result.get == STRING("POP_8") }
+    assert { result.get == STRING("Pop_8") }
   }
 
   behavior of "Directive tokenizing"
