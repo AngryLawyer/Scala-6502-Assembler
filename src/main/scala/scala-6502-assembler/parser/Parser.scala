@@ -66,26 +66,30 @@ object AssemblerParser extends Parsers {
   }
 
   def zeroPage: Parser[AddressingMode] = positioned {
-    byte ^^ {
-      case BYTE(n) => ZeroPage(n)
+    (byte | label) ^^ {
+      case BYTE(n) => ZeroPage(AddressingModeNumber(n))
+      case Label(n) => ZeroPage(AddressingModeLabel(n))
     }
   }
 
   def relative: Parser[AddressingMode] = positioned {
-    byte ^^ {
-      case BYTE(n) => Relative(n)
+    (byte | label) ^^ {
+      case BYTE(n) => Relative(AddressingModeNumber(n))
+      case Label(n) => Relative(AddressingModeLabel(n))
     }
   }
 
   def absolute: Parser[AddressingMode] = positioned {
-    twoBytes ^^ {
-      case TWOBYTES(n) => Absolute(n)
+    (twoBytes | label) ^^ {
+      case TWOBYTES(n) => Absolute(AddressingModeNumber(n))
+      case Label(n) => Absolute(AddressingModeLabel(n))
     }
   }
 
   def immediate: Parser[AddressingMode] = positioned {
-    HASH() ~ number ^^ {
-      case _ ~ NUMBER(n) => Immediate(n)
+    (HASH() ~ (byte | label)) ^^ {
+      case _ ~ BYTE(n) => Immediate(AddressingModeNumber(n))
+      case _ ~ Label(n) => Immediate(AddressingModeLabel(n))
     }
   }
 

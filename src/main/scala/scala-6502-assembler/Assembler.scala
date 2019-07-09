@@ -34,12 +34,13 @@ object Main extends App {
       println(AssemblerLexer(data).right)
       val assembly = AssemblerCompiler(data)
       var out = new FileOutputStream("./out.xex")
+      var map = LabelResolver.getLabelMap(assembly.right.get)
       AssemblerCompiler
-        .toXex(assembly.right.get)
+        .toXex(assembly.right.get, map)
         .map(_.toByte)
         .foreach(out.write(_))
       out.close()
-      println(AssemblerCompiler.assemble(assembly.right.get))
+      println(AssemblerCompiler.assemble(assembly.right.get, map))
     }
     case _ => {
       // oh no
@@ -57,11 +58,11 @@ object AssemblerCompiler {
     } yield ast
   }
 
-  def assemble(code: Section): String = {
-    code.toVirtual6502
+  def assemble(code: Section, map: LabelResolver.LabelMap): String = {
+    code.toVirtual6502(map)
   }
 
-  def toXex(code: Section): List[Int] = {
-    code.toXex
+  def toXex(code: Section, map: LabelResolver.LabelMap): List[Int] = {
+    code.toXex(map)
   }
 }
