@@ -8,8 +8,10 @@ case class UnsupportedAddressingModeException(private val message: String = "", 
 case class NUMBER(value: Int) extends Positional
 case class ORIGIN(value: Int) extends Positional
 
+
 case class Label(name: String) extends Positional
 case class Instruction(name: String) extends Positional
+
 
 sealed trait AddressingModeValue {
   def asByte(map: LabelResolver.LabelMap): List[Int]
@@ -71,6 +73,15 @@ case class InstructionLine(label: Option[Label], instruction: InstructionAST, ne
 }
 
 case class CommentedLine(label: Option[Label], next: Option[Line]) extends Line {
+  def toBytes(index: Int, map: LabelResolver.LabelMap): List[Int] = {
+    next match {
+      case Some(nextLine) => nextLine.toBytes(index, map)
+      case _              => List()
+    }
+  }
+}
+
+case class VariableLine(name: String, value: Int, next: Option[Line]) extends Line {
   def toBytes(index: Int, map: LabelResolver.LabelMap): List[Int] = {
     next match {
       case Some(nextLine) => nextLine.toBytes(index, map)

@@ -124,8 +124,14 @@ object AssemblerParser extends Parsers {
     }
   }
 
+  def variableLine: Parser[Line] = positioned {
+    (label ~ EQUALS() ~ number ~ opt(comment) ~ NEWLINE() ~ opt(line)) ^^ {
+      case Label(l) ~ _ ~ NUMBER(n) ~ _ ~ _ ~ next => VariableLine(l, n, next)
+    }
+  }
+
   def line: Parser[Line] = positioned {
-    instructionLine | commentedLine
+    instructionLine | commentedLine | variableLine
   }
 
   def origin: Parser[ORIGIN] = positioned {
