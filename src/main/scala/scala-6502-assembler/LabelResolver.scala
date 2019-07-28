@@ -17,17 +17,28 @@ object LabelResolver {
   }
 
   private def getLabelMapLine(code: Line, index: Int, map: LabelMap): LabelMap = {
-    val (label, instructionLength, next) = code match {
-      case CommentedLine(label, next) => (label, 0, next)
-      case InstructionLine(label, instruction, next) => (label, instruction.length, next)
-    }
-    val updatedMap = label match {
-      case Some(Label(l)) => map + (l -> index)
-      case None => map
-    }
-    next match {
-      case Some(n) => getLabelMapLine(n, index + instructionLength, updatedMap)
-      case None => updatedMap
+    code match {
+      case VariableLine(label, value, next) => {
+        val updatedMap = map + (label -> value)
+        next match {
+          case Some(n) => getLabelMapLine(n, index, updatedMap)
+          case None => updatedMap
+        }
+      }
+      case _ => {
+        val (label, instructionLength, next) = code match {
+          case CommentedLine(label, next) => (label, 0, next)
+          case InstructionLine(label, instruction, next) => (label, instruction.length, next)
+        }
+        val updatedMap = label match {
+          case Some(Label(l)) => map + (l -> index)
+          case None => map
+        }
+        next match {
+          case Some(n) => getLabelMapLine(n, index + instructionLength, updatedMap)
+          case None => updatedMap
+        }
+      }
     }
   }
 }
