@@ -80,10 +80,16 @@ object AssemblerLexer extends RegexParsers {
     }
   }
 
+  def comma: Parser[COMMA] = positioned {
+    "," ^^ { _ =>
+      COMMA()
+    }
+  }
+
   def tokens: Parser[List[AssemblerToken]] = {
     phrase(
       rep1(
-        comment | hash | decimal | hexTwoByte | hexByte | string | directive | newline | asterisk | equals
+        comment | hash | decimal | hexTwoByte | hexByte | string | directive | newline | asterisk | equals | comma
       )
     ) ^^ { addNewlineIfNeeded(_) }
   }
