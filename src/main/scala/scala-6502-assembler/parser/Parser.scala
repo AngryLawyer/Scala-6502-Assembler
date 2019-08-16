@@ -93,6 +93,24 @@ object AssemblerParser extends Parsers {
     }
   }
 
+  def bytesDirective: Parser[BytesDirective] = positioned {
+    makeDirective(".BYTE") ~ (byte ~ COMMA()).* ~ byte.?  ^^ {
+      case _ ~ items ~ trailing => {
+        val bytes: List[Int] = items.foldLeft(List[Int]()) { (last, current) =>
+          (current match {
+            case (BYTE(x) ~ _) => x    
+          }) +: last
+        }
+        val bytesPlusLast = trailing match {
+          case Some(BYTE(x)) => x +: bytes
+          case None => bytes
+        }
+
+        BytesDirective(bytesPlusLast.reverse)
+      }
+    }
+  }
+
   def label: Parser[Label] = positioned {
     accept("label", { case STRING(l) => Label(l) })
   }
@@ -130,8 +148,19 @@ object AssemblerParser extends Parsers {
     }
   }
 
+  def bytesLine: Parser[Line] = positioned {
+    def lineWithoutLabel = (bytesDirective ~ opt(comment) ~ NEWLINE() ~ opt(line)) ^^ {
+      case BytesDirective(data) ~ _ ~ _ ~ next => BytesLine(None, data, next)
+    }
+    def lineWithLabel = (label ~ bytesDirective ~ opt(comment) ~ NEWLINE() ~ opt(line)) ^^ {
+      case label ~ BytesDirective(data) ~ _ ~ _ ~ next => BytesLine(Some(label), data, next)
+    }
+
+    lineWithoutLabel | lineWithLabel
+  }
+
   def line: Parser[Line] = positioned {
-    instructionLine | commentedLine | variableLine
+    instructionLine | commentedLine | variableLine | bytesLine
   }
 
   def origin: Parser[ORIGIN] = positioned {

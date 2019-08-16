@@ -29,6 +29,8 @@ object LabelResolver {
         val (label, instructionLength, next) = code match {
           case CommentedLine(label, next) => (label, 0, next)
           case InstructionLine(label, instruction, next) => (label, instruction.length, next)
+          case BytesLine(label, data, next) => (label, data.length, next)
+          case VariableLine(label, data, next) => (label, 0, next)
         }
         val updatedMap = label match {
           case Some(Label(l)) => map + (l -> index)

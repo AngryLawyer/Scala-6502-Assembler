@@ -11,6 +11,7 @@ case class ORIGIN(value: Int) extends Positional
 
 case class Label(name: String) extends Positional
 case class Instruction(name: String) extends Positional
+case class BytesDirective(data: List[Int]) extends Positional
 
 
 sealed trait AddressingModeValue {
@@ -86,6 +87,16 @@ case class VariableLine(name: String, value: Int, next: Option[Line]) extends Li
     next match {
       case Some(nextLine) => nextLine.toBytes(index, map)
       case _              => List()
+    }
+  }
+}
+
+case class BytesLine(label: Option[Label], data: List[Int], next: Option[Line])
+    extends Line {
+  def toBytes(index: Int, map: LabelResolver.LabelMap): List[Int] = {
+    next match {
+      case Some(nextLine) => data ++ nextLine.toBytes(index + data.length, map)
+      case _              => data
     }
   }
 }
