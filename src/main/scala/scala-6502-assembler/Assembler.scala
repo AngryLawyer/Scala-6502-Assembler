@@ -23,29 +23,29 @@ object Main extends App {
         .text("in is a required file property")
     )
   }
-  OParser.parse(parser, args, Config()) match {
-    case Some(config) => {
+  OParser.parse(parser, args, Config())
+    .toRight("No valid config")
+    .flatMap { config => {
       val source = Source.fromFile(config.in)
       val data = try {
         source.mkString
       } finally {
         source.close()
       }
-      println(AssemblerLexer(data).right)
-      val assembly = AssemblerCompiler(data)
+      println(AssemblerLexer(data))
+      AssemblerCompiler(data)
+    }}.map { (assembly: Section) => {
       var out = new FileOutputStream("./out.xex")
-      var map = LabelResolver.getLabelMap(assembly.right.get)
+      var map = LabelResolver.getLabelMap(assembly)
       AssemblerCompiler
-        .toXex(assembly.right.get, map)
+        .toXex(assembly, map)
         .map(_.toByte)
         .foreach(out.write(_))
       out.close()
-      println(AssemblerCompiler.assemble(assembly.right.get, map))
-    }
-    case _ => {
-      // oh no
-    }
-  }
+      AssemblerCompiler.assemble(assembly, map)
+    }}.map { (output: String) => {
+      println(output)
+    }}.swap.map { println(_) }
 }
 
 object AssemblerCompiler {
