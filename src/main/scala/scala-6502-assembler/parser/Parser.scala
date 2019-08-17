@@ -47,8 +47,18 @@ object AssemblerParser extends Parsers {
     })
   }
 
+  def makeChar(text: String): Parser[Char] = positioned {
+    accept(text, {
+      case STRING(parsedText) if parsedText == text => Char(parsedText)
+    })
+  }
+
   def byte: Parser[BYTE] = positioned {
     accept("byte", { case n @ BYTE(_) => n })
+  }
+
+  def comma: Parser[COMMA] = positioned {
+    accept("comma", { case c @ COMMA() => c })
   }
 
   def twoBytes: Parser[TWOBYTES] = positioned {
@@ -69,6 +79,13 @@ object AssemblerParser extends Parsers {
     (byte | label) ^^ {
       case BYTE(n) => ZeroPage(AddressingModeNumber(n))
       case Label(n) => ZeroPage(AddressingModeLabel(n))
+    }
+  }
+
+  def zeroPageX: Parser[AddressingMode] = positioned {
+    (byte | label) ~ comma ~ makeChar("X") ^^ {
+      case BYTE(n) ~ _ ~ _ => ZeroPageX(AddressingModeNumber(n))
+      case Label(n) ~ _ ~ _  => ZeroPageX(AddressingModeLabel(n))
     }
   }
 
@@ -94,7 +111,7 @@ object AssemblerParser extends Parsers {
   }
 
   def bytesDirective: Parser[BytesDirective] = positioned {
-    makeDirective(".BYTE") ~ (byte ~ COMMA()).* ~ byte.?  ^^ {
+    makeDirective(".BYTE") ~ (byte ~ comma).* ~ byte.?  ^^ {
       case _ ~ items ~ trailing => {
         val bytes: List[Int] = items.foldLeft(List[Int]()) { (last, current) =>
           (current match {
@@ -122,7 +139,7 @@ object AssemblerParser extends Parsers {
   }
 
   def instruction: Parser[InstructionAST] = positioned {
-    BCS.parse | CLC.parse | CLD.parse | RTS.parse | JMP.parse | LDA.parse | ADC.parse | STA.parse
+    BCS.parse | CLC.parse | CLD.parse | RTS.parse | JMP.parse | LDA.parse | ADC.parse | STA.parse | LDX.parse
   }
 
   def instructionLine: Parser[Line] = positioned {

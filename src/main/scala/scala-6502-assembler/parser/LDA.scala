@@ -16,7 +16,7 @@ case class LDA(value: AddressingMode) extends InstructionAST {
 
 object LDA {
   import AssemblerParser._
-  val parse = makeInstruction("LDA") ~ (zeroPage | immediate | absolute) ^^ {
+  val parse = makeInstruction("LDA") ~ (zeroPage | zeroPageX | immediate | absolute) ^^ {
     case _ ~ adm => LDA(adm)
   }
 }

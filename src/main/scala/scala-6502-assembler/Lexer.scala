@@ -23,7 +23,7 @@ object AssemblerLexer extends RegexParsers {
     "[0-9]+".r ^^ { str =>
       {
         val number = str.toInt
-        if (number > 0 && number < 256) {
+        if (number >= 0 && number < 256) {
           BYTE(number)
         } else {
           TWOBYTES(number)

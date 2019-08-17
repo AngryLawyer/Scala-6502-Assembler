@@ -1,48 +1,10 @@
 import org.scalatest.{FlatSpec, DiagrammedAssertions}
-import scala_6502_assembler.lexer.{
-  COMMENT,
-  BYTE,
-  TWOBYTES,
-  STRING,
-  DIRECTIVE,
-  NEWLINE,
-  HASH,
-  ASTERISK,
-  EQUALS
-}
-import scala_6502_assembler.parser.{
-  AssemblerParser,
-  End,
-  CommentedLine,
-  InstructionLine,
-  LDA,
-  ADC,
-  STA,
-  Immediate,
-  ZeroPage,
-  Section
-}
+import scala_6502_assembler.lexer._
+import scala_6502_assembler.parser._
 
 class ParserSpec extends FlatSpec with DiagrammedAssertions {
 
   behavior of "Parsing"
-
-  it should "Parse a simple line" in {
-    val result = AssemblerParser.instructionLine(
-      new AssemblerParser.AssemblerTokenReader(
-        List(
-          STRING("LDA"),
-          BYTE(2),
-          COMMENT("; Load 2 into accumulator"),
-          NEWLINE()
-        )
-      )
-    )
-    assert { result.successful }
-    assert {
-      result.get == InstructionLine(None, LDA(ZeroPage(2)), None)
-    }
-  }
 
   it should "Parse a .END directive" in {
     val result = AssemblerParser.end(
@@ -90,7 +52,7 @@ class ParserSpec extends FlatSpec with DiagrammedAssertions {
           0,
           InstructionLine(
             None,
-            LDA(Immediate(2)),
+            LDA(Immediate(AddressingModeNumber(2))),
             None
           ),
           None
@@ -125,15 +87,15 @@ class ParserSpec extends FlatSpec with DiagrammedAssertions {
           0,
           InstructionLine(
             None,
-            LDA(Immediate(2)),
+            LDA(Immediate(AddressingModeNumber(2))),
             Some(
               InstructionLine(
                 None,
-                ADC(Immediate(2)),
+                ADC(Immediate(AddressingModeNumber(2))),
                 Some(
                   InstructionLine(
                     None,
-                    STA(ZeroPage(0xCB)),
+                    STA(ZeroPage(AddressingModeNumber(0xCB))),
                     None
                   )
                 )
@@ -175,18 +137,18 @@ class ParserSpec extends FlatSpec with DiagrammedAssertions {
           0,
           InstructionLine(
             None,
-            LDA(Immediate(2)),
+            LDA(Immediate(AddressingModeNumber(2))),
             Some(
               CommentedLine(
                 None,
                 Some(
                   InstructionLine(
                     None,
-                    ADC(Immediate(2)),
+                    ADC(Immediate(AddressingModeNumber(2))),
                     Some(
                       CommentedLine(
                         None,
-                        Some(InstructionLine(None, STA(ZeroPage(203)), None))
+                        Some(InstructionLine(None, STA(ZeroPage(AddressingModeNumber(203))), None))
                       )
                     )
                   )

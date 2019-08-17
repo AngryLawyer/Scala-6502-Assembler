@@ -10,6 +10,7 @@ case class ORIGIN(value: Int) extends Positional
 
 
 case class Label(name: String) extends Positional
+case class Char(name: String) extends Positional
 case class Instruction(name: String) extends Positional
 case class BytesDirective(data: List[Int]) extends Positional
 
@@ -44,6 +45,9 @@ case class Immediate(value: AddressingModeValue) extends AddressingMode {
   def length = 1
 }
 case class ZeroPage(value: AddressingModeValue) extends AddressingMode {
+  def length = 1
+}
+case class ZeroPageX(value: AddressingModeValue) extends AddressingMode {
   def length = 1
 }
 case class Absolute(value: AddressingModeValue) extends AddressingMode {
