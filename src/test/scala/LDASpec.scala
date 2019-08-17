@@ -22,20 +22,19 @@ class LDASpec extends FlatSpec with DiagrammedAssertions {
   }
 
   it should "Parse a zeroPageX" in {
-    val result = AssemblerParser.instructionLine(
+    val result = LDA.parse(
       new AssemblerParser.AssemblerTokenReader(
         List(
           STRING("LDA"),
           BYTE(2),
           COMMA(),
-          STRING("X"),
-          NEWLINE()
+          STRING("X")
         )
       )
     )
     assert { result.successful }
     assert {
-      result.get == InstructionLine(None, LDA(ZeroPageX(AddressingModeNumber(2))), None)
+      result.get == LDA(ZeroPageX(AddressingModeNumber(2)))
     }
   }
 }

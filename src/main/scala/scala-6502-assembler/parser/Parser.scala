@@ -76,16 +76,16 @@ object AssemblerParser extends Parsers {
   }
 
   def zeroPage: Parser[AddressingMode] = positioned {
-    (byte | label) ^^ {
+    // FIXME: Handle labels
+    byte ^^ {
       case BYTE(n) => ZeroPage(AddressingModeNumber(n))
-      case Label(n) => ZeroPage(AddressingModeLabel(n))
     }
   }
 
   def zeroPageX: Parser[AddressingMode] = positioned {
-    (byte | label) ~ comma ~ makeChar("X") ^^ {
+    // FIXME: Handle labels
+    byte ~ comma ~ makeChar("X") ^^ {
       case BYTE(n) ~ _ ~ _ => ZeroPageX(AddressingModeNumber(n))
-      case Label(n) ~ _ ~ _  => ZeroPageX(AddressingModeLabel(n))
     }
   }
 
@@ -100,6 +100,13 @@ object AssemblerParser extends Parsers {
     (twoBytes | label) ^^ {
       case TWOBYTES(n) => Absolute(AddressingModeNumber(n))
       case Label(n) => Absolute(AddressingModeLabel(n))
+    }
+  }
+
+  def absoluteX: Parser[AddressingMode] = positioned {
+    (twoBytes | label) ~ comma ~ makeChar("X") ^^ {
+      case TWOBYTES(n) ~ _ ~ _ => Absolute(AddressingModeNumber(n))
+      case Label(n) ~ _ ~ _ => AbsoluteX(AddressingModeLabel(n))
     }
   }
 

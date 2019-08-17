@@ -6,7 +6,9 @@ case class LDA(value: AddressingMode) extends InstructionAST {
     value match {
       case Immediate(n) => 0xA9 :: n.asByte(map)
       case ZeroPage(n)  => 0xA5 :: n.asByte(map)
+      case ZeroPageX(n)  => 0xB5 :: n.asByte(map)
       case Absolute(n)  => 0xAD :: n.asShort(map)
+      case AbsoluteX(n)  => 0xBD :: n.asShort(map)
       case _ => throw new UnsupportedAddressingModeException
     }
   }
@@ -16,7 +18,7 @@ case class LDA(value: AddressingMode) extends InstructionAST {
 
 object LDA {
   import AssemblerParser._
-  val parse = makeInstruction("LDA") ~ (zeroPage | zeroPageX | immediate | absolute) ^^ {
+  val parse = makeInstruction("LDA") ~ (zeroPageX | zeroPage | immediate | absoluteX | absolute) ^^ {
     case _ ~ adm => LDA(adm)
   }
 }

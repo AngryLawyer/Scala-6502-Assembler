@@ -22,7 +22,9 @@ sealed trait AddressingModeValue {
 }
 
 case class AddressingModeLabel(name: String) extends AddressingModeValue {
-  def asByte(map: LabelResolver.LabelMap) = List(map(name) & 0xFF)
+  def asByte(map: LabelResolver.LabelMap) = {
+    List(map(name) & 0xFF)
+  }
   def asShort(map: LabelResolver.LabelMap) = {
     List(map(name) & 0xFF, (map(name) >> 8) & 0xFF)
   }
@@ -51,6 +53,9 @@ case class ZeroPageX(value: AddressingModeValue) extends AddressingMode {
   def length = 1
 }
 case class Absolute(value: AddressingModeValue) extends AddressingMode {
+  def length = 2
+}
+case class AbsoluteX(value: AddressingModeValue) extends AddressingMode {
   def length = 2
 }
 case class Relative(value: AddressingModeValue) extends AddressingMode {
