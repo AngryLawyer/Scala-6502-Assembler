@@ -86,10 +86,16 @@ object AssemblerLexer extends RegexParsers {
     }
   }
 
+  def quote: Parser[QUOTE] = positioned {
+    "\\\"[ -~]*\\\"".r ^^ { str =>
+      QUOTE(str.slice(1, str.length-1))
+    }
+  }
+
   def tokens: Parser[List[AssemblerToken]] = {
     phrase(
       rep1(
-        comment | hash | decimal | hexTwoByte | hexByte | string | directive | newline | asterisk | equals | comma
+        comment | hash | decimal | hexTwoByte | hexByte | string | directive | newline | asterisk | equals | comma | quote
       )
     ) ^^ { addNewlineIfNeeded(_) }
   }
