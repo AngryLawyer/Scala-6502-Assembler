@@ -12,8 +12,12 @@ case class ORIGIN(value: Int) extends Positional
 case class Label(name: String) extends Positional
 case class Char(name: String) extends Positional
 case class Instruction(name: String) extends Positional
-case class BytesDirective(data: List[Int]) extends Positional
+case class BytesDirective(data: List[BytesContent]) extends Positional
 
+sealed trait BytesContent
+case class BytesContentByte(data: Int) extends BytesContent
+case class BytesContentQuote(data: String) extends BytesContent
+case class BytesContentVariable(data: String) extends BytesContent
 
 sealed trait AddressingModeValue {
   def asByte(map: LabelResolver.LabelMap): List[Int]
@@ -100,12 +104,19 @@ case class VariableLine(name: String, value: Int, next: Option[Line]) extends Li
   }
 }
 
-case class BytesLine(label: Option[Label], data: List[Int], next: Option[Line])
+case class BytesLine(label: Option[Label], data: List[BytesContent], next: Option[Line])
     extends Line {
+  private def contentsToBytes(map: LabelResolver.LabelMap): List[Int] = data.collect {
+    case BytesContentByte(b) => List(b)
+    case BytesContentQuote(q) => q.map(_.toInt)
+    case BytesContentVariable(v) => List(map(v) & 0xFF)
+  }.flatten
+
   def toBytes(index: Int, map: LabelResolver.LabelMap): List[Int] = {
+    val dataParsed = contentsToBytes(map)
     next match {
-      case Some(nextLine) => data ++ nextLine.toBytes(index + data.length, map)
-      case _              => data
+      case Some(nextLine) => dataParsed ++ nextLine.toBytes(index + dataParsed.length, map)
+      case _              => dataParsed
     }
   }
 }

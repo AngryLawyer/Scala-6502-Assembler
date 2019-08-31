@@ -75,6 +75,10 @@ object AssemblerParser extends Parsers {
     myByte | myTwoBytes
   }
 
+  def quote: Parser[QUOTE] = positioned {
+    accept("quote", { case q @ QUOTE(_) => q })
+  }
+
   def zeroPage: Parser[AddressingMode] = positioned {
     // FIXME: Handle labels
     byte ^^ {
@@ -118,19 +122,21 @@ object AssemblerParser extends Parsers {
   }
 
   def bytesDirective: Parser[BytesDirective] = positioned {
-    makeDirective(".BYTE") ~ (byte ~ comma).* ~ byte.?  ^^ {
+    makeDirective(".BYTE") ~ ((byte | quote | label) ~ comma).* ~ (byte | quote | label).?  ^^ {
       case _ ~ items ~ trailing => {
-        val bytes: List[Int] = items.foldLeft(List[Int]()) { (last, current) =>
-          (current match {
-            case (BYTE(x) ~ _) => x    
-          }) +: last
+        val content = items.collect {
+            case (BYTE(x) ~ _) => BytesContentByte(x)    
+            case (QUOTE(x) ~ _) => BytesContentQuote(x)
+            case (Label(x) ~ _) => BytesContentVariable(x)
         }
-        val bytesPlusLast = trailing match {
-          case Some(BYTE(x)) => x +: bytes
-          case None => bytes
+        val contentPlusLast = trailing match {
+          case Some(BYTE(x)) => content :+ BytesContentByte(x)
+          case Some(QUOTE(x)) => content :+ BytesContentQuote(x)
+          case Some(Label(x)) => content :+ BytesContentVariable(x)
+          case None => content
         }
 
-        BytesDirective(bytesPlusLast.reverse)
+        BytesDirective(contentPlusLast)
       }
     }
   }
