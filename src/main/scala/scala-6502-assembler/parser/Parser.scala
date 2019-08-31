@@ -79,6 +79,12 @@ object AssemblerParser extends Parsers {
     accept("quote", { case q @ QUOTE(_) => q })
   }
 
+  def equation: Parser[Equation] = positioned {
+    number ^^ {
+      case NUMBER(b) => Equation.Value(b)
+    }
+  }
+
   def zeroPage: Parser[AddressingMode] = positioned {
     // FIXME: Handle labels
     byte ^^ {
