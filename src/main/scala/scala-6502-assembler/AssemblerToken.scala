@@ -14,3 +14,4 @@ case class ASTERISK() extends AssemblerToken
 case class EQUALS() extends AssemblerToken
 case class COMMA() extends AssemblerToken
 case class QUOTE(text: String) extends AssemblerToken
+case class OPERATOR(text: String) extends AssemblerToken

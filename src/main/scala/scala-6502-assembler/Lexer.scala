@@ -19,6 +19,10 @@ object AssemblerLexer extends RegexParsers {
     }
   }
 
+  def operator: Parser[OPERATOR] = positioned {
+    "[&/+-]".r ^^ { str => OPERATOR(str) }
+  }
+
   def decimal: Parser[AssemblerToken] = positioned {
     "[0-9]+".r ^^ { str =>
       {
@@ -95,7 +99,7 @@ object AssemblerLexer extends RegexParsers {
   def tokens: Parser[List[AssemblerToken]] = {
     phrase(
       rep1(
-        comment | hash | decimal | hexTwoByte | hexByte | string | directive | newline | asterisk | equals | comma | quote
+        comment | hash | decimal | hexTwoByte | hexByte | string | directive | newline | asterisk | equals | comma | quote | operator
       )
     ) ^^ { addNewlineIfNeeded(_) }
   }
