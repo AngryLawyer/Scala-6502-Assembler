@@ -4,7 +4,9 @@ import scala_6502_assembler.parser._
 object LabelResolver {
   type LabelMap = Map[String, Int]
 
-  def getLabelMap(code: Section): Map[String, Int] = {
+  def apply():LabelMap = Map[String, Int]()
+
+  def getLabelMap(code: Section): LabelMap = {
     getLabelMapSection(code, Map())
   }
 

@@ -65,6 +65,12 @@ object AssemblerParser extends Parsers {
     accept("twoBytes", { case n @ TWOBYTES(_) => n })
   }
 
+  def makeOperator(text: String): Parser[OPERATOR] = positioned {
+    accept(text, {
+      case OPERATOR(parsedText) if parsedText == text => OPERATOR(parsedText)
+    })
+  }
+
   def number: Parser[NUMBER] = positioned {
     val myByte = byte ^^ {
       case BYTE(n) => NUMBER(n)
@@ -79,12 +85,34 @@ object AssemblerParser extends Parsers {
     accept("quote", { case q @ QUOTE(_) => q })
   }
 
-  def equation: Parser[Equation] = positioned {
+  def equationValue: Parser[Equation] = positioned {
     (number | label) ^^ {
       case NUMBER(b) => Equation.Value(b)
       case Label(s) => Equation.Variable(s)
     }
   }
+
+  def equationAddSub: Parser[Equation] = positioned {
+    equationValue ~ (makeOperator("+") | makeOperator("-")) ~ equationValue ^^ {
+      case x ~ OPERATOR("+") ~ y => Equation.Sum(x, y)
+      case x ~ OPERATOR("-") ~ y => Equation.Subtract(x, y)
+    }
+  }
+
+  def equationMultDiv: Parser[Equation] = positioned {
+    equationValue ~ (makeOperator("*") | makeOperator("/")) ~ equationValue ^^ {
+      case x ~ OPERATOR("*") ~ y => Equation.Multiply(x, y)
+      case x ~ OPERATOR("/") ~ y => Equation.Divide(x, y)
+    }
+  }
+
+  def equationBoolean: Parser[Equation] = positioned {
+    equationValue ~ (makeOperator("&")) ~ equationValue ^^ {
+      case x ~ OPERATOR("&") ~ y => Equation.And(x, y)
+    }
+  }
+
+  def equation: Parser[Equation] = equationAddSub | equationMultDiv | equationBoolean | equationValue
 
   def zeroPage: Parser[AddressingMode] = positioned {
     // FIXME: Handle labels
