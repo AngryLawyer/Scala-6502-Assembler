@@ -19,29 +19,19 @@ case class BytesContentByte(data: Int) extends BytesContent
 case class BytesContentQuote(data: String) extends BytesContent
 case class BytesContentVariable(data: String) extends BytesContent
 
-sealed trait AddressingModeValue {
-  def asByte(map: LabelResolver.LabelMap): List[Int]
-  def asShort(map: LabelResolver.LabelMap): List[Int]
-  def asRelative(index: Int, map: LabelResolver.LabelMap): List[Int]
-}
-
-case class AddressingModeLabel(name: String) extends AddressingModeValue {
-  def asByte(map: LabelResolver.LabelMap) = {
-    List(map(name) & 0xFF)
+case class AddressingModeValue(equation: Equation) {
+  def asByte(map: LabelResolver.LabelMap): List[Int] = {
+    List(equation.evaluate(map) & 0xFF)
   }
-  def asShort(map: LabelResolver.LabelMap) = {
-    List(map(name) & 0xFF, (map(name) >> 8) & 0xFF)
+  def asShort(map: LabelResolver.LabelMap): List[Int] = {
+    val data = equation.evaluate(map)
+    List(data & 0xFF, (data >> 8) & 0xFF)
   }
   def asRelative(index: Int, map: LabelResolver.LabelMap): List[Int] = {
-    val labelLoc = map(name)
+    val labelLoc = equation.evaluate(map)
     var jump = labelLoc - index
     List((jump + 127) & 0xFF)
   }
-}
-case class AddressingModeNumber(value: Int) extends AddressingModeValue {
-  def asByte(map: LabelResolver.LabelMap) = List(value & 0xFF)
-  def asShort(map: LabelResolver.LabelMap) = List(value & 0xFF, (value >> 8) & 0xFF)
-  def asRelative(index: Int, map: LabelResolver.LabelMap) = List(value & 0xFF)
 }
 
 sealed trait AddressingMode extends Positional {

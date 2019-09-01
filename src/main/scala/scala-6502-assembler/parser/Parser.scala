@@ -115,44 +115,38 @@ object AssemblerParser extends Parsers {
   def equation: Parser[Equation] = equationAddSub | equationMultDiv | equationBoolean | equationValue
 
   def zeroPage: Parser[AddressingMode] = positioned {
-    // FIXME: Handle labels
-    byte ^^ {
-      case BYTE(n) => ZeroPage(AddressingModeNumber(n))
+    equation ^^ {
+      case e => ZeroPage(AddressingModeValue(e))
     }
   }
 
   def zeroPageX: Parser[AddressingMode] = positioned {
-    // FIXME: Handle labels
-    byte ~ comma ~ makeChar("X") ^^ {
-      case BYTE(n) ~ _ ~ _ => ZeroPageX(AddressingModeNumber(n))
+    equation ~ comma ~ makeChar("X") ^^ {
+      case e ~ _ ~ _ => ZeroPageX(AddressingModeValue(e))
     }
   }
 
   def relative: Parser[AddressingMode] = positioned {
-    (byte | label) ^^ {
-      case BYTE(n) => Relative(AddressingModeNumber(n))
-      case Label(n) => Relative(AddressingModeLabel(n))
+    equation ^^ {
+      case e => Relative(AddressingModeValue(e))
     }
   }
 
   def absolute: Parser[AddressingMode] = positioned {
-    (twoBytes | label) ^^ {
-      case TWOBYTES(n) => Absolute(AddressingModeNumber(n))
-      case Label(n) => Absolute(AddressingModeLabel(n))
+    equation ^^ {
+      case e => Absolute(AddressingModeValue(e))
     }
   }
 
   def absoluteX: Parser[AddressingMode] = positioned {
-    (twoBytes | label) ~ comma ~ makeChar("X") ^^ {
-      case TWOBYTES(n) ~ _ ~ _ => Absolute(AddressingModeNumber(n))
-      case Label(n) ~ _ ~ _ => AbsoluteX(AddressingModeLabel(n))
+    equation ~ comma ~ makeChar("X") ^^ {
+      case e ~ _ ~ _ => AbsoluteX(AddressingModeValue(e))
     }
   }
 
   def immediate: Parser[AddressingMode] = positioned {
-    (HASH() ~ (byte | label)) ^^ {
-      case _ ~ BYTE(n) => Immediate(AddressingModeNumber(n))
-      case _ ~ Label(n) => Immediate(AddressingModeLabel(n))
+    (HASH() ~ equation) ^^ {
+      case _ ~ e => Immediate(AddressingModeValue(e))
     }
   }
 
