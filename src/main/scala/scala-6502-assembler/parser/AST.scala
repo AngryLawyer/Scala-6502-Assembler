@@ -19,8 +19,6 @@ case class BytesContentByte(data: Int) extends BytesContent
 case class BytesContentQuote(data: String) extends BytesContent
 case class BytesContentVariable(data: String) extends BytesContent
 
-case class Equation()
-
 sealed trait AddressingModeValue {
   def asByte(map: LabelResolver.LabelMap): List[Int]
   def asShort(map: LabelResolver.LabelMap): List[Int]

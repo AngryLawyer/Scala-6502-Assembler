@@ -80,8 +80,9 @@ object AssemblerParser extends Parsers {
   }
 
   def equation: Parser[Equation] = positioned {
-    number ^^ {
+    (number | label) ^^ {
       case NUMBER(b) => Equation.Value(b)
+      case Label(s) => Equation.Variable(s)
     }
   }
 
