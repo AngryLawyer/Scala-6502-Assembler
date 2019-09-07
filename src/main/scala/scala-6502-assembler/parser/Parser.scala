@@ -181,7 +181,7 @@ object AssemblerParser extends Parsers {
   }
 
   def instruction: Parser[InstructionAST] = positioned {
-    BCS.parse | CLC.parse | CLD.parse | RTS.parse | JMP.parse | LDA.parse | ADC.parse | STA.parse | LDX.parse | CMP.parse | BEQ.parse | INX.parse
+    BCS.parse | CLC.parse | CLD.parse | RTS.parse | JMP.parse | LDA.parse | ADC.parse | STA.parse | LDX.parse | CMP.parse | BEQ.parse | INX.parse | JSR.parse
   }
 
   def instructionLine: Parser[Line] = positioned {
