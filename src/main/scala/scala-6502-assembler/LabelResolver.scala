@@ -1,6 +1,12 @@
 package scala_6502_assembler
 import scala_6502_assembler.parser._
 
+import scalax.collection.GraphPredef._
+import scalax.collection.GraphEdge._
+import scalax.collection.constrained.immutable.Graph
+import scalax.collection.constrained.constraints.Acyclic
+     
+
 object LabelResolver {
   type LabelMap = Map[String, Int]
 
@@ -45,4 +51,8 @@ object LabelResolver {
       }
     }
   }
+}
+
+object LabelResolverGraph {
+implicit val conf = Acyclic
 }
